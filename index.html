@@ -1,0 +1,2212 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MPK Drobin - Zintegrowany System Transportowy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-dark: #0a0a0a;
+      --accent-maroon: #5c1218;
+      --accent-maroon-bright: #8a1c24;
+      --accent-maroon-glow: rgba(138, 28, 36, 0.35);
+      --accent-cream: #f5e8d0;
+      --accent-cream-dim: #c5b8a0;
+      --glass-bg: rgba(18, 18, 18, 0.85);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --text-white: #ffffff;
+      --text-dim: #999999;
+      --penalty-red: #ff3333;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    
+    html, body {
+      width: 100vw; height: 100dvh;
+      background-color: var(--bg-dark);
+      color: var(--text-white);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow: hidden;
+    }
+
+    .app-viewport { display: flex; width: 100vw; height: 100dvh; position: relative; overflow: hidden; }
+
+    .bg-glow-top-right {
+      position: absolute; width: 700px; height: 700px;
+      background: radial-gradient(circle, var(--accent-maroon-glow) 0%, rgba(0,0,0,0) 70%);
+      top: -20%; right: -10%; filter: blur(90px); pointer-events: none; z-index: 1;
+    }
+
+    /* EKRAN LOGOWANIA */
+    #login-screen {
+      position: fixed; inset: 0; background: #000; z-index: 2000;
+      display: flex; justify-content: center; align-items: center; padding: 20px;
+      overflow-y: auto;
+    }
+
+    .login-container {
+      position: relative; width: 100%; max-width: 420px;
+      background: rgba(18, 18, 18, 0.85); backdrop-filter: blur(25px);
+      border: 1px solid rgba(138, 28, 36, 0.4); border-radius: 28px;
+      padding: 36px 28px; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.9); text-align: center;
+    }
+
+    .brand-title { font-size: 26px; font-weight: 800; color: var(--accent-cream); letter-spacing: 2px; margin-bottom: 5px; }
+    .brand-sub { font-size: 13px; color: var(--accent-cream-dim); margin-bottom: 25px; }
+
+    .form-group { margin-bottom: 12px; text-align: left; }
+    .form-group label { display: block; font-size: 12px; font-weight: 700; color: #ccc; margin-bottom: 4px; margin-left: 4px; }
+
+    .input-pill {
+      width: 100%; height: 42px; background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 14px;
+      padding: 0 16px; font-size: 14px; font-weight: 600; color: #fff; outline: none;
+      transition: all 0.25s ease; font-family: inherit;
+    }
+    .input-pill:focus { border-color: var(--accent-maroon-bright); background: rgba(255, 255, 255, 0.12); }
+
+    select.input-pill { background-color: #1a1a1a; color: #ffffff; }
+    select.input-pill option { background-color: #141414; color: #ffffff; padding: 10px; }
+    textarea.input-pill { height: 100px; padding: 10px 14px; resize: none; }
+
+    .btn-maroon {
+      width: 100%; height: 44px;
+      background: linear-gradient(135deg, #70151c 0%, #3e0b10 100%);
+      border: 1px solid rgba(245, 232, 208, 0.2); border-radius: 14px; color: var(--accent-cream);
+      font-size: 14px; font-weight: 800; cursor: pointer; margin-top: 5px;
+      box-shadow: 0 8px 20px rgba(92, 18, 24, 0.4); transition: all 0.25s ease;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-maroon:hover { transform: translateY(-2px); filter: brightness(1.15); }
+    .btn-maroon:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* STYLIZACJA PRZYCISKÓW KIEROWCY */
+    .btn-drive-start { 
+      background: linear-gradient(135deg, #70151c 0%, #450c11 100%) !important; 
+      color: var(--accent-cream) !important;
+      border: 1px solid rgba(245, 232, 208, 0.25) !important;
+      box-shadow: 0 6px 16px rgba(112, 21, 28, 0.35) !important; 
+    }
+    .btn-drive-next { 
+      background: linear-gradient(135deg, #2b3a4a 0%, #1a232e 100%) !important; 
+      color: #e3edf7 !important;
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+      box-shadow: 0 6px 16px rgba(43, 58, 74, 0.3) !important; 
+    }
+    .btn-drive-stop { 
+      background: linear-gradient(135deg, #3d080e 0%, #1c0205 100%) !important; 
+      color: #f7a8a8 !important;
+      border: 1px solid rgba(255, 77, 77, 0.3) !important;
+      box-shadow: 0 6px 16px rgba(61, 8, 14, 0.6) !important; 
+    }
+    .btn-drive-resume { 
+      background: linear-gradient(135deg, #70151c 0%, #3e0b10 100%) !important; 
+      color: var(--accent-cream) !important;
+      border: 1px solid rgba(245, 232, 208, 0.3) !important;
+    }
+    .btn-drive-stand { 
+      background: linear-gradient(135deg, #38421d 0%, #1f2610 100%) !important; 
+      color: #d8e6be !important;
+      border: 1px solid rgba(130, 160, 80, 0.3) !important;
+      box-shadow: 0 6px 16px rgba(31, 38, 16, 0.5) !important;
+    }
+
+    .penalty-card {
+      background: rgba(180, 20, 20, 0.15) !important;
+      border: 1px solid rgba(255, 51, 51, 0.4) !important;
+      box-shadow: 0 8px 25px rgba(255, 51, 51, 0.15);
+    }
+    .penalty-badge {
+      background: rgba(255, 51, 51, 0.25);
+      color: #ff6666;
+      border: 1px solid rgba(255, 51, 51, 0.5);
+      padding: 3px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 800;
+      display: inline-block;
+      margin-left: 6px;
+    }
+
+    /* LAYOUT APLIKACJI */
+    #main-layout { display: none; width: 100vw; height: 100dvh; position: relative; z-index: 2; }
+
+    .toggle-sidebar-btn {
+      position: absolute; top: 12px; left: 12px; z-index: 100;
+      background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff; width: 40px; height: 40px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .toggle-sidebar-btn:hover { background: rgba(255, 255, 255, 0.25); }
+
+    /* SIDEBAR */
+    .sidebar-menu {
+      width: 260px; height: 100%;
+      background: var(--glass-bg); backdrop-filter: blur(35px);
+      border-right: 1px solid var(--glass-border);
+      display: flex; flex-direction: column; justify-content: space-between;
+      padding: 20px 14px; z-index: 10; transition: all 0.3s ease;
+      position: relative;
+    }
+    .sidebar-menu.hidden { margin-left: -260px; }
+
+    .nav-list { display: flex; flex-direction: column; gap: 6px; margin-top: 40px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 14px;
+      color: #fff; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s ease;
+    }
+    .nav-item:hover { background: rgba(255, 255, 255, 0.05); }
+    .nav-item.active {
+      background: linear-gradient(135deg, #70151c 0%, #3e0b10 100%);
+      border: 1px solid rgba(245, 232, 208, 0.25); color: var(--accent-cream); font-weight: 700;
+      box-shadow: 0 6px 18px rgba(92, 18, 24, 0.4);
+    }
+
+    /* CONTENT AREA */
+    .content-area {
+      flex: 1; height: 100%; overflow-y: auto; padding: 60px 20px 20px 20px;
+      display: flex; flex-direction: column; position: relative;
+    }
+
+    .view-section { display: none; width: 100%; height: 100%; flex-direction: column; }
+    .view-section.active-view { display: flex; }
+
+    .glass-card {
+      background: rgba(18, 18, 18, 0.65); backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 18px; padding: 18px;
+      margin-bottom: 12px; transition: all 0.5s ease;
+    }
+
+    @keyframes startGlowEffect {
+      0% { box-shadow: 0 0 0px rgba(138, 28, 36, 0); border-color: rgba(255, 255, 255, 0.08); }
+      50% { box-shadow: 0 0 30px rgba(138, 28, 36, 0.7); border-color: #8a1c24; }
+      100% { box-shadow: 0 0 0px rgba(138, 28, 36, 0); border-color: rgba(255, 255, 255, 0.08); }
+    }
+
+    .start-glow-active {
+      animation: startGlowEffect 1.5s ease-in-out;
+    }
+
+    .card-title-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+
+    .list-item {
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px; padding: 10px 14px; margin-bottom: 6px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px);
+      z-index: 1000; justify-content: center; align-items: center; padding: 15px;
+    }
+    .modal-box {
+      width: 100%; max-width: 650px; background: #121212; border: 1px solid rgba(138, 28, 36, 0.5);
+      border-radius: 20px; padding: 22px; max-height: 90vh; overflow-y: auto;
+    }
+
+    .grafik-container { display: flex; gap: 15px; height: 100%; }
+    .grafik-main { flex: 1; display: flex; flex-direction: column; }
+    .grafik-sidebar {
+      width: 300px; background: rgba(12, 12, 12, 0.85); border: 1px solid var(--glass-border);
+      border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 10px;
+    }
+
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 10px; }
+    .day-box {
+      background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px; padding: 6px; min-height: 55px; cursor: pointer; transition: 0.2s;
+      display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .day-box:hover { border-color: var(--accent-maroon-bright); }
+    .day-box.selected { border-color: var(--accent-cream); background: rgba(138, 28, 36, 0.25); }
+    .day-box.has-shift, .day-box.work { border-color: rgba(138, 28, 36, 0.6); background: rgba(92, 18, 24, 0.2); }
+
+    /* STRUKTURA DLA KURSU */
+    .kurs-layout-grid {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      gap: 10px;
+      min-height: 0;
+    }
+
+    .stops-scroll {
+      flex: 1; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; padding: 10px; overflow-y: auto; min-height: 0;
+    }
+
+    .stop-row {
+      padding: 10px 14px; background: rgba(255,255,255,0.03); border-radius: 10px;
+      margin-bottom: 6px; border-left: 4px solid #444; display: flex;
+      justify-content: space-between; align-items: center; transition: all 0.3s ease;
+      font-size: 13px;
+    }
+
+    .stop-row.active {
+      border-left-color: var(--accent-cream); background: rgba(138, 28, 36, 0.25);
+      box-shadow: 0 4px 15px rgba(138, 28, 36, 0.2);
+    }
+
+    .stop-row.passed { border-left-color: #3b7a46; opacity: 0.45; }
+
+    .course-status-banner {
+      display: none;
+      background: linear-gradient(135deg, rgba(56, 66, 29, 0.9) 0%, rgba(31, 38, 16, 0.9) 100%);
+      border: 1px solid rgba(130, 160, 80, 0.4);
+      color: #d8e6be;
+      padding: 6px 12px; border-radius: 10px; margin-top: 5px;
+      text-align: center; font-weight: 700; font-size: 12px;
+      letter-spacing: 0.5px; backdrop-filter: blur(8px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    
+    .course-status-banner.stop-mode {
+      background: linear-gradient(135deg, rgba(61, 8, 14, 0.9) 0%, rgba(28, 2, 5, 0.9) 100%);
+      border-color: rgba(255, 77, 77, 0.4);
+      color: #f7a8a8;
+    }
+
+    .loop-overlay {
+      display: none; position: absolute; inset: 0; background: rgba(0, 0, 0, 0.88);
+      backdrop-filter: blur(15px); z-index: 50; border-radius: 20px;
+      flex-direction: column; justify-content: center; align-items: center;
+      text-align: center; padding: 20px;
+    }
+
+    .live-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px; padding: 12px; margin-bottom: 10px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .live-card-header { display: flex; justify-content: space-between; align-items: center; }
+    .status-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 16px; text-transform: uppercase; }
+    .status-badge.in-progress { background: rgba(138, 28, 36, 0.25); color: var(--accent-cream); border: 1px solid var(--accent-maroon-bright); }
+    .status-badge.break { background: rgba(197, 184, 160, 0.15); color: var(--accent-cream); border: 1px solid var(--accent-cream-dim); }
+    .status-badge.stand { background: rgba(56, 66, 29, 0.4); color: #d8e6be; border: 1px solid rgba(130, 160, 80, 0.5); }
+    .status-badge.idle { background: rgba(255, 255, 255, 0.08); color: #ccc; border: 1px solid rgba(255, 255, 255, 0.2); }
+
+    .live-progress-bar { width: 100%; height: 5px; background: rgba(255, 255, 255, 0.1); border-radius: 3px; overflow: hidden; }
+    .live-progress-fill { height: 100%; background: linear-gradient(90deg, #70151c, #f5e8d0); width: 0%; transition: width 0.4s ease; }
+
+    /* REGULACJE MOBILNE */
+    body.is-mobile .sidebar-menu { position: absolute; left: 0; top: 0; bottom: 0; width: 240px; z-index: 1000; box-shadow: 10px 0 30px rgba(0,0,0,0.8); }
+    body.is-mobile .sidebar-menu.hidden { margin-left: -250px; }
+    body.is-mobile .content-area { padding: 55px 10px 10px 10px !important; }
+    body.is-mobile .glass-card { padding: 12px !important; border-radius: 14px; }
+    body.is-mobile .btn-maroon { height: 40px; font-size: 12px; }
+    body.is-mobile .grafik-container { flex-direction: column; }
+    body.is-mobile .grafik-sidebar { width: 100%; }
+
+    @media (orientation: landscape) and (max-height: 500px) {
+      .content-area { padding: 8px 12px 8px 55px !important; }
+      .toggle-sidebar-btn { top: 8px; left: 8px; width: 36px; height: 36px; font-size: 18px; }
+      .glass-card { padding: 10px !important; margin-bottom: 6px !important; }
+      .card-title-bar { margin-bottom: 6px !important; }
+      
+      .kurs-layout-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      
+      .stops-scroll { margin: 0; height: 100%; }
+      .stop-row { padding: 6px 10px; margin-bottom: 4px; font-size: 11px; }
+      .btn-maroon { height: 34px !important; font-size: 11px !important; }
+      .form-group { margin-bottom: 6px; }
+      .input-pill { height: 34px; font-size: 12px; }
+      .calendar-grid { gap: 4px; margin-top: 5px; }
+      .day-box { min-height: 35px; padding: 4px; font-size: 10px; }
+      .brand-title { font-size: 20px; }
+      .brand-sub { font-size: 11px; margin-bottom: 15px; }
+      .login-container { padding: 18px; max-width: 380px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- EKRAN LOGOWANIA -->
+  <div id="login-screen">
+    <div class="login-container">
+      <div class="brand-title">MPK DROBIN</div>
+      <div class="brand-sub">ZINTEGROWANY SYSTEM TRANSPORTOWY</div>
+
+      <div class="form-group">
+        <label>Użytkownik / Login</label>
+        <input type="text" id="l-user" class="input-pill" value="jankowalski" placeholder="bartek (Dyspozytor) lub jankowalski (Kierowca)">
+      </div>
+
+      <div class="form-group">
+        <label>Hasło Dostępowe</label>
+        <input type="password" id="l-pass" class="input-pill" value="kierowca123" placeholder="Wpisz hasło">
+      </div>
+
+      <div class="form-group">
+        <label>Wybierz Urządzenie</label>
+        <select id="l-device" class="input-pill">
+          <option value="desktop">🖥️ Komputer / Tablet (Duży ekran)</option>
+          <option value="mobile" selected>📱 Telefon (iOS / Android)</option>
+        </select>
+      </div>
+
+      <button class="btn-maroon" onclick="zalogujDoSystemu()">Zaloguj się do Systemu ➔</button>
+      <p id="login-err" style="color: #ff6b6b; font-size: 12px; margin-top: 8px; display: none;">Nieprawidłowy login lub hasło!</p>
+    </div>
+  </div>
+
+  <!-- APLIKACJA GŁÓWNA -->
+  <div id="main-layout" class="app-viewport">
+    <div class="bg-glow-top-right"></div>
+
+    <button class="toggle-sidebar-btn" onclick="toggleSidebar()">☰</button>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar-menu" id="sidebar">
+      <div>
+        <div id="sidebar-role-title" style="font-size: 16px; font-weight: 800; color: var(--accent-cream); text-align: center; margin-top: 5px;">
+          👨‍💻 DYSPOZYTORNIA
+        </div>
+        <div class="nav-list" id="sidebar-nav-container"></div>
+      </div>
+
+      <div style="padding: 8px; text-align: center; font-size: 11px; color: var(--text-dim); border-top: 1px solid rgba(255,255,255,0.1);">
+        Zalogowano jako: <strong id="logged-user-label" style="color: #fff;">-</strong>
+        <br><span style="cursor: pointer; color: var(--accent-cream-dim); margin-top: 4px; display: inline-block;" onclick="wyloguj()">Wyloguj</span>
+      </div>
+    </div>
+
+    <!-- CONTENT AREA -->
+    <div class="content-area">
+
+      <!-- DYSPOZYTOR -->
+      <div id="view-disp-linie" class="view-section">
+        <div class="card-title-bar">
+          <h2>Lista Aktywnych Linii i Przystanków</h2>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-maroon" style="width: auto; padding: 0 14px;" onclick="otworzEdytorLinii(null)">+ Stwórz Nową Linię</button>
+            <button class="btn-maroon" style="width: auto; padding: 0 14px; background: #222;" onclick="otworzBazePrzystankow()">🚏 Baza Przystanków</button>
+          </div>
+        </div>
+        <div id="lista-linii-glowne" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;"></div>
+      </div>
+
+      <div id="view-disp-kierowcy" class="view-section">
+        <div class="card-title-bar">
+          <h2>Baza, Profile i Zdalny Podgląd Kierowców</h2>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+          <div class="glass-card">
+            <h3 style="margin-bottom: 12px;">Dodaj Nowego Kierowcę</h3>
+            <div class="form-group">
+              <label>Imię i Nazwisko Kierowcy</label>
+              <input type="text" id="k-name" class="input-pill" placeholder="np. Jan Kowalski">
+            </div>
+            <div class="form-group">
+              <label>ID / Login Kierowcy</label>
+              <input type="text" id="k-login" class="input-pill" placeholder="np. jankowalski">
+            </div>
+            <div class="form-group">
+              <label>Hasło Konta Kierowcy</label>
+              <input type="text" id="k-pass" class="input-pill" value="kierowca123" placeholder="Ustal hasło">
+            </div>
+            <button class="btn-maroon" onclick="dodajKierowce()">+ Stwórz Profil Kierowcy</button>
+          </div>
+
+          <div class="glass-card">
+            <h3 style="margin-bottom: 12px;">Podgląd Live Kierowców</h3>
+            <div id="lista-kierowcow"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="view-disp-kary" class="view-section">
+        <div class="card-title-bar">
+          <h2>Ewidencja Kar i Przerw Służbowych</h2>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+          <div class="glass-card penalty-card">
+            <h3 style="margin-bottom: 12px; color: #ff6666;">🚨 Kary za Kursy (Czerwone Doliczenie Karne)</h3>
+            <div class="form-group">
+              <label>Wybierz Kierowcę</label>
+              <select id="disp-action-kierowca-kursy" class="input-pill"></select>
+            </div>
+            <div class="form-group">
+              <label>Dodatkowe Kółka (Doliczenie Karne):</label>
+              <div style="display: flex; gap: 8px;">
+                <input type="number" id="disp-extra-loops" class="input-pill" value="2" min="1" style="flex:1;">
+                <button class="btn-maroon" style="width: auto; padding: 0 12px; background: linear-gradient(135deg, #cc0000 0%, #660000 100%); border-color: rgba(255,100,100,0.5);" onclick="addPunishmentDriver()">Nałóż Karę ⚠️</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-card">
+            <h3 style="margin-bottom: 12px; color: var(--accent-cream-dim);">☕ Kary i Przerwy Czasowe</h3>
+            <div class="form-group">
+              <label>Wybierz Kierowcę</label>
+              <select id="disp-action-kierowca-przerwy" class="input-pill"></select>
+            </div>
+            <div class="form-group">
+              <label>Ustaw Natychmiastową Przerwę Dyspozytorską:</label>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn-maroon" style="flex:1; background: #222;" onclick="setDriverBreak(5)">➕ Przerwa 5 min</button>
+                <button class="btn-maroon" style="flex:1; background: #222;" onclick="setDriverBreak(10)">➕ Przerwa 10 min</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="view-disp-grafik" class="view-section">
+        <div class="card-title-bar">
+          <h2>Grafik Służb Kierowców z Planowaniem Przerw</h2>
+        </div>
+        <div class="grafik-container">
+          <div class="grafik-main glass-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <div class="form-group" style="margin: 0; width: 220px;">
+                <label>Wybierz Kierowcę:</label>
+                <select id="select-grafik-kierowca" class="input-pill" onchange="zaladujGrafikKierowcy()"></select>
+              </div>
+            </div>
+            <div class="calendar-grid" id="disp-cal-grid"></div>
+          </div>
+
+          <div class="grafik-sidebar">
+            <h3 style="color: var(--accent-cream); font-size: 15px;">Przydziel Służbę i Przerwę</h3>
+            <div id="wybrany-dzien-label" style="font-size: 12px; font-weight: 700; color: #fff;">Wybrany Dzień: Brak</div>
+
+            <div class="form-group">
+              <label>Wybierz Linię</label>
+              <select id="g-select-linia" class="input-pill"></select>
+            </div>
+
+            <div class="form-group">
+              <label>Liczba Kółek Do Zrobienia</label>
+              <input type="number" id="g-koolka" class="input-pill" value="5" min="1" max="15">
+            </div>
+
+            <div class="form-group" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">
+              <label>Przerwa Po Którym Kółku?</label>
+              <input type="number" id="g-przerwa-po-kolku" class="input-pill" value="2" min="1" max="15">
+            </div>
+
+            <div class="form-group">
+              <label>Czas Przerwy (Minuty)</label>
+              <input type="number" id="g-przerwa-czas" class="input-pill" value="15" min="5" max="60" step="5">
+            </div>
+
+            <button class="btn-maroon" onclick="zapiszSluzbeDoGrafika()">Zapisz i Wyślij Powiadomienie 🔔</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="view-disp-wiadomosci" class="view-section">
+        <div class="card-title-bar">
+          <h2>Centrum Komunikacji z Kierowcami</h2>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; flex: 1;">
+          <div class="glass-card" style="display: flex; flex-direction: column;">
+            <h3>Wyślij Wiadomość Do Kierowcy</h3>
+            <div class="form-group" style="margin-top: 10px;">
+              <label>Odbiorca Wiadomości</label>
+              <select id="msg-kierowca" class="input-pill"></select>
+            </div>
+            <div class="form-group">
+              <label>Nagłówek Komunikatu</label>
+              <input type="text" id="msg-tytul" class="input-pill" value="Komunikat Dyspozytora">
+            </div>
+            <div class="form-group" style="flex: 1; display: flex; flex-direction: column;">
+              <label>Treść Wiadomości</label>
+              <textarea id="msg-tresc" class="input-pill" style="flex: 1;" placeholder="Wpisz treść..."></textarea>
+            </div>
+            <button class="btn-maroon" onclick="wyslijWiadomoscOdDyspozytora()">Wyślij Powiadomienie 📩</button>
+          </div>
+
+          <div class="glass-card" style="display: flex; flex-direction: column;">
+            <h3>Otrzymane Zgłoszenia i Prośby</h3>
+            <div id="disp-prosoby-lista" style="flex: 1; overflow-y: auto; margin-top: 10px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KIEROWCA -->
+      <div id="view-driver-home" class="view-section">
+        <div style="font-size: 24px; font-weight: 700; margin-bottom: 2px;">Witaj, <span id="driver-display-name" style="color: var(--accent-cream);">-</span></div>
+        <div style="font-size: 12px; color: var(--accent-cream-dim); margin-bottom: 15px;" id="driver-datetime">Dzisiaj jest: -</div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-bottom: 15px;">
+          <div class="glass-card">
+            <div style="font-size: 11px; color: var(--text-dim);">DZISIEJSZA LINIA</div>
+            <div style="font-size: 22px; font-weight: 800; color: var(--accent-cream); margin-top: 2px;" id="driver-today-line">Linia 161</div>
+            <p style="color: var(--text-dim); margin-top: 4px; font-size: 11px;" id="driver-today-dir">Trasa: Północ ➔ Południe</p>
+          </div>
+
+          <div class="glass-card">
+            <div style="font-size: 11px; color: var(--text-dim);">DO ZROBIENIA DZISIAJ</div>
+            <div style="font-size: 22px; font-weight: 800; color: #fff; margin-top: 2px;" id="driver-today-loops-goal">5 kółek</div>
+            <p style="color: var(--text-dim); margin-top: 4px; font-size: 11px;">Ukończono: <span id="driver-completed-loops-val">0</span> <span id="driver-penalty-tag"></span></p>
+          </div>
+
+          <div class="glass-card">
+            <div style="font-size: 11px; color: var(--text-dim);">STATUS SŁUŻBY</div>
+            <div style="font-size: 22px; font-weight: 800; color: var(--accent-cream); margin-top: 2px;" id="driver-status-text">Gotowy</div>
+            <button class="btn-maroon btn-drive-start" style="margin-top: 8px;" onclick="pokazWidok('driver-kurs'); rozpoczniWyjazdNaLinie();">Rozpocznij Kurs (WYJ) ➔</button>
+          </div>
+        </div>
+
+        <div class="glass-card">
+          <h3>Ostatnie Powiadomienia</h3>
+          <div id="driver-home-notif-list" style="margin-top: 8px;"></div>
+        </div>
+      </div>
+
+      <div id="view-driver-grafik" class="view-section">
+        <div class="glass-card" style="height: 100%; display: flex; flex-direction: column;">
+          <div class="card-title-bar">
+            <h2>Miesięczny Grafik Służb - Sierpień 2026</h2>
+            <button class="btn-maroon btn-drive-start" style="width: auto; padding: 0 16px;" onclick="pokazWidok('driver-kurs'); rozpoczniWyjazdNaLinie();">▶ Rozpocznij Kurs (WYJ)</button>
+          </div>
+          <div class="calendar-grid" id="driver-cal-grid" style="flex: 1;"></div>
+        </div>
+      </div>
+
+      <div id="view-driver-kurs" class="view-section">
+        <div class="glass-card" id="kurs-main-card" style="height: 100%; display: flex; flex-direction: column; position: relative;">
+          
+          <div class="loop-overlay" id="loop-overlay">
+            <h1 style="font-size: 24px; margin-bottom: 8px; color: #fff;" id="overlay-title">Skończono kółko!</h1>
+            <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 15px;" id="overlay-desc">Następny kurs rozpocznie się w odwrotnym kierunku.</p>
+            <button class="btn-maroon btn-drive-start" id="btn-next-loop-action" style="font-size: 14px; width: auto; padding: 0 24px;" onclick="rozpocznijKolejneKolko()">Zacznij kolejny kurs ▶</button>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 6px;">
+            <div>
+              <span style="color: var(--accent-cream-dim); font-size: 11px; font-weight: 700;">
+                AKTYWNA LINIA: <span id="active-line-name">WYJ</span> (KÓŁKO <span id="current-loop-num">1</span>/<span id="max-loops-num">5</span>) 
+                <span id="active-penalty-tag"></span>
+              </span>
+              <h2 style="font-size: 18px; color: #fff;" id="active-route-title">WYJAZD NA LINIĘ</h2>
+            </div>
+            <div style="text-align: right;">
+              <span style="color: var(--text-dim); font-size: 11px; font-weight: 700;" id="timer-label">WYJAZD NA LINIĘ</span>
+              <div style="font-size: 26px; font-weight: 800; color: var(--accent-cream); font-family: monospace; line-height:1;" id="timer">--:--</div>
+            </div>
+          </div>
+
+          <div class="course-status-banner" id="course-status-banner">
+            ☕ OBECNIE MASZ POSTÓJ / KURSU WSTRZYMANY
+          </div>
+
+          <div id="cooldown-alert-bar" style="color: var(--accent-cream); font-size: 12px; font-weight: bold; margin-top: 4px; display: none;"></div>
+
+          <div class="kurs-layout-grid">
+            <div class="stops-scroll" id="stops-list"></div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px; justify-content: flex-end;">
+              <div style="display: flex; gap: 6px; align-items: center; background: rgba(255,255,255,0.04); padding: 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+                <span style="font-size: 11px; font-weight: 700; color: var(--accent-cream); white-space: nowrap;">📢 Zapowiedź:</span>
+                <select id="quick-announcement-select" class="input-pill" style="height: 34px; font-size: 12px; margin: 0;">
+                  <option value="Prosimy wysiąść z pojazdu, wyjazd na linię.">Wyjazd na linię (WYJ)</option>
+                  <option value="Prosimy wysiąść z pojazdu, przejazd techniczny, zjazd do zajezdni.">Zjazd do zajezdni (ZAJ)</option>
+                  <option value="Awaria pojazdu. Prosimy o opuszczenie pojazdu.">Awaria pojazdu - Prosimy wysiąść</option>
+                  <option value="Autobus uszkodzony. Prosimy wysiąść.">Autobus uszkodzony - Prosimy wysiąść</option>
+                  <option value="Prosimy przygotować bilety do kontroli.">Kontrola biletów</option>
+                  <option value="Prosimy o zachowanie ostrożności przy wysiadaniu.">Ostrożnie przy wysiadaniu</option>
+                </select>
+                <button class="btn-maroon" style="width: auto; height: 34px; padding: 0 12px; font-size: 11px; margin: 0;" onclick="wyglosWybranaZapowiedz()">Wygłoś</button>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                <button id="btn-start-drive" class="btn-maroon btn-drive-start" style="width: 100%; font-size: 11px;" onclick="rozpoczniWyjazdNaLinie()">ZACZNIJ KURS</button>
+                <button id="btn-next-stop" class="btn-maroon btn-drive-next" style="width: 100%; font-size: 11px;" onclick="registerNextStop()">NASTĘPNY PRZYSTANEK ✓</button>
+                <button id="btn-stop-drive" class="btn-maroon btn-drive-stop" style="width: 100%; font-size: 11px;" onclick="toggleZatrzymajWznowKurs()">ZATRZYMAJ</button>
+                <button id="btn-stand-drive" class="btn-maroon btn-drive-stand" style="width: 100%; font-size: 11px;" onclick="togglePostojKurs()">POSTÓJ</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div id="view-driver-prosby" class="view-section">
+        <div class="glass-card" style="height: 100%; display: flex; flex-direction: column;">
+          <h2>Zgłoszenie / Prośba do Dyspozytora</h2>
+          
+          <div class="form-group" style="margin-top: 10px;">
+            <label>Typ Zgłoszenia</label>
+            <select id="p-typ" class="input-pill" onchange="obslugaZmianyTypuProsby()">
+              <option value="Prośba o dzień wolny">Prośba o dzień wolny</option>
+              <option value="Prośba o zamianę służby">Prośba o zamianę służby</option>
+              <option value="Zgłoszenie awarii pojazdu">Zgłoszenie awarii pojazdu</option>
+              <option value="Własny temat">Własny temat (wpisz poniżej)</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="container-wlasny-temat" style="display: none;">
+            <label>Twój Własny Temat</label>
+            <input type="text" id="p-wlasny-temat" class="input-pill" placeholder="Wpisz temat zgłoszenia...">
+          </div>
+
+          <div class="form-group" style="flex: 1; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <label style="margin: 0;">Opis Szczegółowy</label>
+              <div style="display: flex; gap: 6px;">
+                <button type="button" id="btn-start-voice" class="btn-maroon" style="height: 26px; padding: 0 8px; font-size: 10px; margin: 0; background: #3a2a1a; color: var(--accent-cream);" onclick="startVoiceRecognition()">🎤 Głosowo</button>
+                <button type="button" id="btn-stop-voice" class="btn-maroon" style="height: 26px; padding: 0 8px; font-size: 10px; margin: 0; background: #222; display: none;" onclick="stopVoiceRecognition()">⏹️ Stop</button>
+              </div>
+            </div>
+            <textarea id="p-powod" class="input-pill" style="flex: 1;" placeholder="Wpisz szczegóły prośby lub użyj dyktowania głosowego..."></textarea>
+          </div>
+          
+          <button class="btn-maroon" onclick="wyslijProsbeKierowcy()">Wyślij Zgłoszenie ➔</button>
+        </div>
+      </div>
+
+      <div id="view-driver-powiadomienia" class="view-section">
+        <div class="glass-card" style="height: 100%; display: flex; flex-direction: column;">
+          <h2>Centrum Powiadomień od Dyspozytora</h2>
+          <div id="driver-full-notif-list" style="flex: 1; overflow-y: auto; margin-top: 10px;"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL: EDYCJA LINII -->
+  <div class="modal-overlay" id="modal-linia">
+    <div class="modal-box">
+      <h2 style="color: var(--accent-cream); margin-bottom: 15px;" id="modal-title">Edycja Linii</h2>
+
+      <div class="form-group">
+        <label>Numer / Nazwa Linii</label>
+        <input type="text" id="m-l-numer" class="input-pill" placeholder="np. Linia 161">
+      </div>
+
+      <div class="form-group">
+        <label>Kierunek Główny (np. Północ > Południe)</label>
+        <input type="text" id="m-l-kierunek" class="input-pill" placeholder="np. Północ ➔ Południe">
+      </div>
+
+      <h4 style="margin-top: 15px; margin-bottom: 8px;">Przystanki na Trasie Linii (w kolejności):</h4>
+      <div id="m-l-przystanki-lista" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px;"></div>
+
+      <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+        <select id="m-l-dodaj-p-select" class="input-pill" style="flex: 1;"></select>
+        <button class="btn-maroon" style="width: auto; padding: 0 12px;" onclick="dodajPrzystanekDoLiniiEdycja()">+ Dodaj</button>
+      </div>
+
+      <div style="display: flex; gap: 8px; margin-top: 15px;">
+        <button class="btn-maroon" style="flex: 1;" onclick="zapiszEdycjeLinii()">Zapisz Zmiany</button>
+        <button class="btn-maroon" style="flex: 1; background: #333;" onclick="zamknijModal('modal-linia')">Anuluj</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: BAZA PRZYSTANKÓW -->
+  <div class="modal-overlay" id="modal-baza-p">
+    <div class="modal-box">
+      <h2 style="color: var(--accent-cream); margin-bottom: 15px;">Zarządzanie Bazą Przystanków</h2>
+
+      <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 15px;">
+        <h4 style="margin-bottom: 10px; color: #fff;">Dodaj Nowy Przystanek</h4>
+        <div class="form-group">
+          <label>Nazwa Przystanku (wyświetlana)</label>
+          <input type="text" id="bp-nazwa" class="input-pill" placeholder="np. Dworzec Główny">
+        </div>
+        <div class="form-group">
+          <label>Dokładna Zapowiedź Głosowa</label>
+          <input type="text" id="bp-mowiona" class="input-pill" placeholder="np. Dworzec Główny Pętla">
+        </div>
+        <button class="btn-maroon" onclick="dodajPrzystanekDoBazyGlobalnie()">+ Dodaj Przystanek</button>
+      </div>
+
+      <h4 style="margin-bottom: 8px;">Dostępne Przystanki:</h4>
+      <div id="baza-przystankow-lista" style="max-height: 200px; overflow-y: auto;"></div>
+
+      <button class="btn-maroon" style="margin-top: 15px; background: #333;" onclick="zamknijModal('modal-baza-p')">Zamknij</button>
+    </div>
+  </div>
+
+  <script>
+    let zalogowanaRola = null;
+    let zalogowanyKierowcaObj = null;
+    let clockInterval = null;
+    let isStopAnnouncementPlaying = false; 
+
+    // DOMYŚLNE DANE DLA APLIKACJI
+    let przystankiBaza = [
+      { id: 1, nazwa: "Północ (Pętla Startowa)", mowiona: "Północ" },
+      { id: 2, nazwa: "Rondo", mowiona: "Rondo" },
+      { id: 3, nazwa: "Szpital", mowiona: "Szpital" },
+      { id: 4, nazwa: "Południe (Pętla Końcowa)", mowiona: "Południe" }
+    ];
+
+    let linieBaza = [
+      {
+        id: 1,
+        numer: "Linia 161",
+        kierunek: "Północ ➔ Południe",
+        przystanki: [
+          { id: 1, nazwa: "Północ (Pętla Startowa)", mowiona: "Północ", czas: 12 },
+          { id: 2, nazwa: "Rondo", mowiona: "Rondo", czas: 15 },
+          { id: 3, nazwa: "Szpital", mowiona: "Szpital", czas: 15 },
+          { id: 4, nazwa: "Południe (Pętla Końcowa)", mowiona: "Południe", czas: 10 }
+        ]
+      }
+    ];
+
+    let kierowcyBaza = [
+      { 
+        id: 1, 
+        name: "Jan Kowalski", 
+        login: "jankowalski", 
+        pass: "kierowca123",
+        assignedLoops: 5,
+        completedLoops: 0,
+        missedLoops: 0,
+        punishmentLoops: 0,
+        isOnBreak: false,
+        lastStopTimestamp: 0,
+        currentStopIdx: 0,
+        currentLoop: 0,
+        activeLine: "Linia 161",
+        statusText: "Postój"
+      },
+      { 
+        id: 2, 
+        name: "Piotr Nowak", 
+        login: "pnowak", 
+        pass: "kierowca123",
+        assignedLoops: 5,
+        completedLoops: 0,
+        missedLoops: 0,
+        punishmentLoops: 0,
+        isOnBreak: false,
+        lastStopTimestamp: 0,
+        currentStopIdx: 0,
+        currentLoop: 0,
+        activeLine: "Linia 161",
+        statusText: "Postój"
+      }
+    ];
+
+    let grafikBaza = {}; 
+    let powiadomieniaBaza = {
+      1: [{ id: 1, nadawca: "Dyspozytornia", tresc: "Witaj w systemie MPK Drobin. Twoje konto jest aktywne.", czas: "06:00" }],
+      2: [{ id: 1, nadawca: "Dyspozytornia", tresc: "Witaj w systemie MPK Drobin. Twoje konto jest aktywne.", czas: "06:00" }]
+    }; 
+    let prosbyBaza = []; 
+
+    // MECHANIZM TRWAŁEGO ZAPISU I ODCZYTU Z LOCALSTORAGE (F5 PRESERVATION)
+    function saveState() {
+      localStorage.setItem('mpk_przystankiBaza', JSON.stringify(przystankiBaza));
+      localStorage.setItem('mpk_linieBaza', JSON.stringify(linieBaza));
+      localStorage.setItem('mpk_kierowcyBaza', JSON.stringify(kierowcyBaza));
+      localStorage.setItem('mpk_grafikBaza', JSON.stringify(grafikBaza));
+      localStorage.setItem('mpk_powiadomieniaBaza', JSON.stringify(powiadomieniaBaza));
+      localStorage.setItem('mpk_prosbyBaza', JSON.stringify(prosbyBaza));
+    }
+
+    function loadState() {
+      if (localStorage.getItem('mpk_przystankiBaza')) przystankiBaza = JSON.parse(localStorage.getItem('mpk_przystankiBaza'));
+      if (localStorage.getItem('mpk_linieBaza')) linieBaza = JSON.parse(localStorage.getItem('mpk_linieBaza'));
+      if (localStorage.getItem('mpk_kierowcyBaza')) kierowcyBaza = JSON.parse(localStorage.getItem('mpk_kierowcyBaza'));
+      if (localStorage.getItem('mpk_grafikBaza')) grafikBaza = JSON.parse(localStorage.getItem('mpk_grafikBaza'));
+      if (localStorage.getItem('mpk_powiadomieniaBaza')) powiadomieniaBaza = JSON.parse(localStorage.getItem('mpk_powiadomieniaBaza'));
+      if (localStorage.getItem('mpk_prosbyBaza')) prosbyBaza = JSON.parse(localStorage.getItem('mpk_prosbyBaza'));
+    }
+
+    // Odczyt danych na starcie strony
+    loadState();
+
+    let availableVoices = [];
+    function loadVoices() {
+      if ('speechSynthesis' in window) {
+        availableVoices = window.speechSynthesis.getVoices();
+      }
+    }
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+      loadVoices();
+    }
+
+    function czytajTekst(tekst, isStopAnnouncement = false) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const msg = new SpeechSynthesisUtterance(tekst);
+        msg.lang = 'pl-PL';
+        
+        if (availableVoices.length > 0) {
+          const plVoice = availableVoices.find(v => v.lang.includes('pl'));
+          if (plVoice) msg.voice = plVoice;
+        }
+
+        if (isStopAnnouncement) {
+          isStopAnnouncementPlaying = true;
+          msg.onend = () => { isStopAnnouncementPlaying = false; };
+          msg.onerror = () => { isStopAnnouncementPlaying = false; };
+        }
+
+        window.speechSynthesis.speak(msg);
+      }
+    }
+
+    function startLiveClock() {
+      clearInterval(clockInterval);
+      const updateClock = () => {
+        const now = new Date();
+        const optionsDate = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const timeStr = now.toLocaleTimeString('pl-PL');
+        const dateStr = now.toLocaleDateString('pl-PL', optionsDate);
+        
+        const elem = document.getElementById('driver-datetime');
+        if (elem) {
+          elem.innerText = `Dzisiaj jest: ${dateStr} | ${timeStr}`;
+        }
+      };
+      updateClock();
+      clockInterval = setInterval(updateClock, 1000);
+    }
+
+    function zalogujDoSystemu() {
+      const userVal = document.getElementById('l-user').value.trim();
+      const passVal = document.getElementById('l-pass').value.trim();
+      const deviceVal = document.getElementById('l-device').value;
+      const errBox = document.getElementById('login-err');
+
+      errBox.style.display = 'none';
+
+      if (deviceVal === 'mobile') {
+        document.body.classList.add('is-mobile');
+      } else {
+        document.body.classList.remove('is-mobile');
+      }
+
+      if (userVal.toLowerCase() === "bartek") {
+        if (passVal === "1234") {
+          zalogowanaRola = "disp";
+          zalogowanyKierowcaObj = null;
+          uruchomAplikacje();
+        } else {
+          errBox.innerText = "Nieprawidłowe hasło dyspozytora!";
+          errBox.style.display = 'block';
+        }
+        return;
+      }
+
+      const kFound = kierowcyBaza.find(k => 
+        k.login.toLowerCase() === userVal.toLowerCase() || 
+        k.name.toLowerCase() === userVal.toLowerCase()
+      );
+
+      if (kFound) {
+        if (kFound.pass === passVal) {
+          zalogowanaRola = "driver";
+          zalogowanyKierowcaObj = kFound;
+          uruchomAplikacje();
+        } else {
+          errBox.innerText = "Nieprawidłowe hasło dla tego kierowcy!";
+          errBox.style.display = 'block';
+        }
+      } else {
+        errBox.innerText = "Nie znaleziono użytkownika o takim loginie!";
+        errBox.style.display = 'block';
+      }
+    }
+
+    function uruchomAplikacje() {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('main-layout').style.display = 'flex';
+      
+      const navBox = document.getElementById('sidebar-nav-container');
+      const roleTitle = document.getElementById('sidebar-role-title');
+      const userLbl = document.getElementById('logged-user-label');
+
+      navBox.innerHTML = "";
+
+      if (zalogowanaRola === 'disp') {
+        roleTitle.innerText = "👨‍💻 DYSPOZYTORNIA";
+        userLbl.innerText = "Bartek (Dyspozytor)";
+        
+        navBox.innerHTML = `
+          <div id="nav-disp-linie" class="nav-item" onclick="pokazWidok('disp-linie')"><span>🚏</span> Kreator Linii</div>
+          <div id="nav-disp-kierowcy" class="nav-item" onclick="pokazWidok('disp-kierowcy')"><span>👨‍✈️</span> Profile & Podgląd</div>
+          <div id="nav-disp-kary" class="nav-item" onclick="pokazWidok('disp-kary')"><span>⚠️</span> Zarządzanie Karami</div>
+          <div id="nav-disp-grafik" class="nav-item" onclick="pokazWidok('disp-grafik')"><span>📅</span> Zarządzanie Grafikiem</div>
+          <div id="nav-disp-wiadomosci" class="nav-item" onclick="pokazWidok('disp-wiadomosci')"><span>💬</span> Wiadomości i Prośby</div>
+        `;
+
+        renderGlowneLinie();
+        renderKierowcy();
+        generujKalendarzGrafikaDyspozytora();
+        renderDispProsby();
+        pokazWidok('disp-linie');
+      } else {
+        roleTitle.innerText = "🚌 PANEL KIEROWCY";
+        userLbl.innerText = zalogowanyKierowcaObj.name;
+
+        navBox.innerHTML = `
+          <div id="nav-driver-home" class="nav-item" onclick="pokazWidok('driver-home')"><span>🧩</span> Strona Główna</div>
+          <div id="nav-driver-grafik" class="nav-item" onclick="pokazWidok('driver-grafik')"><span>📅</span> Miesięczny Grafik</div>
+          <div id="nav-driver-kurs" class="nav-item" onclick="pokazWidok('driver-kurs')"><span>🚌</span> Dzisiejszy Kurs</div>
+          <div id="nav-driver-prosby" class="nav-item" onclick="pokazWidok('driver-prosby')"><span>🙏</span> Zgłoś Prośbę</div>
+          <div id="nav-driver-powiadomienia" class="nav-item" onclick="pokazWidok('driver-powiadomienia')"><span>🔔</span> Powiadomienia</div>
+        `;
+
+        odswiezDaneKierowcyHome();
+        startLiveClock();
+        generujKalendarzKierowcy();
+        renderStopsKierowcy();
+        renderDriverPowiadomienia();
+        pokazWidok('driver-home');
+      }
+    }
+
+    function wyloguj() {
+      document.getElementById('main-layout').style.display = 'none';
+      document.getElementById('login-screen').style.display = 'flex';
+      clearInterval(timerInterval);
+      clearInterval(boardingInterval);
+      clearInterval(clockInterval);
+      clearTimeout(announcementTimeout);
+    }
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('hidden');
+    }
+
+    function pokazWidok(viewName) {
+      document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active-view'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+      const vElem = document.getElementById(`view-${viewName}`);
+      const nElem = document.getElementById(`nav-${viewName}`);
+
+      if (vElem) vElem.classList.add('active-view');
+      if (nElem) nElem.classList.add('active');
+
+      if (document.body.classList.contains('is-mobile')) {
+        document.getElementById('sidebar').classList.add('hidden');
+      }
+    }
+
+    /* DYSPOZYTOR LOGIKA */
+    function otworzBazePrzystankow() {
+      document.getElementById('modal-baza-p').style.display = 'flex';
+      renderListaBazyPrzystankow();
+    }
+
+    function renderListaBazyPrzystankow() {
+      const box = document.getElementById('baza-przystankow-lista');
+      box.innerHTML = "";
+      przystankiBaza.forEach((p, idx) => {
+        box.innerHTML += `
+          <div class="list-item">
+            <div>
+              <strong>${p.nazwa}</strong>
+              <div style="font-size: 11px; color: var(--text-dim);">Głosowo: "${p.mowiona}"</div>
+            </div>
+            <button style="background: none; border: none; color: var(--accent-cream); cursor: pointer;" onclick="usunPrzystanekZBazyGlobalnej(${idx})">🗑️ Usuń</button>
+          </div>
+        `;
+      });
+    }
+
+    function dodajPrzystanekDoBazyGlobalnie() {
+      const nazwa = document.getElementById('bp-nazwa').value.trim();
+      const mowiona = document.getElementById('bp-mowiona').value.trim();
+      if (!nazwa) return alert("Podaj nazwę przystanku!");
+
+      przystankiBaza.push({ id: Date.now(), nazwa, mowiona: mowiona || nazwa });
+      document.getElementById('bp-nazwa').value = "";
+      document.getElementById('bp-mowiona').value = "";
+      saveState();
+      renderListaBazyPrzystankow();
+      uaktualnijSelectPrzystankow();
+    }
+
+    function usunPrzystanekZBazyGlobalnej(idx) {
+      przystankiBaza.splice(idx, 1);
+      saveState();
+      renderListaBazyPrzystankow();
+      uaktualnijSelectPrzystankow();
+    }
+
+    function uaktualnijSelectPrzystankow() {
+      const selectP = document.getElementById('m-l-dodaj-p-select');
+      if (!selectP) return;
+      selectP.innerHTML = "";
+      przystankiBaza.forEach(p => selectP.innerHTML += `<option value="${p.id}">${p.nazwa}</option>`);
+    }
+
+    function renderGlowneLinie() {
+      const box = document.getElementById('lista-linii-glowne');
+      if(!box) return;
+      box.innerHTML = "";
+      linieBaza.forEach(l => {
+        box.innerHTML += `
+          <div class="glass-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <h3 style="color: var(--accent-cream);">${l.numer}</h3>
+              <button class="btn-maroon" style="width: auto; padding: 4px 10px; font-size: 11px;" onclick="otworzEdytorLinii(${l.id})">✏️ Edytuj</button>
+            </div>
+            <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 8px;">Kierunek: <strong>${l.kierunek}</strong></div>
+            <div style="font-size: 11px; font-weight: 700; color: #ccc; margin-bottom: 4px;">Przystanki (${l.przystanki.length}):</div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              ${l.przystanki.map((p, i) => `<div style="font-size: 11px; background: rgba(255,255,255,0.04); padding: 4px 8px; border-radius: 6px;">${i+1}. ${p.nazwa} - ${p.czas}s</div>`).join('')}
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    let edytowanaLiniaId = null;
+    let tymczasowePrzystankiLinii = [];
+
+    function otworzEdytorLinii(liniaId) {
+      edytowanaLiniaId = liniaId;
+      document.getElementById('modal-linia').style.display = 'flex';
+      uaktualnijSelectPrzystankow();
+
+      if (liniaId) {
+        const l = linieBaza.find(x => x.id === liniaId);
+        document.getElementById('modal-title').innerText = `Edycja: ${l.numer}`;
+        document.getElementById('m-l-numer').value = l.numer;
+        document.getElementById('m-l-kierunek').value = l.kierunek;
+        tymczasowePrzystankiLinii = JSON.parse(JSON.stringify(l.przystanki));
+      } else {
+        document.getElementById('modal-title').innerText = `Tworzenie Nowej Linii`;
+        document.getElementById('m-l-numer').value = "";
+        document.getElementById('m-l-kierunek').value = "";
+        tymczasowePrzystankiLinii = [];
+      }
+      renderPrzystankiWEdytorze();
+    }
+
+    function renderPrzystankiWEdytorze() {
+      const list = document.getElementById('m-l-przystanki-lista');
+      list.innerHTML = "";
+      tymczasowePrzystankiLinii.forEach((p, idx) => {
+        list.innerHTML += `
+          <div class="list-item" style="padding: 6px 10px;">
+            <span style="font-size: 12px;"><strong>${idx+1}. ${p.nazwa}</strong></span>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <label style="font-size: 10px;">Czas (s):</label>
+              <input type="number" value="${p.czas}" class="input-pill" style="width: 55px; height: 28px; padding: 0 6px;" onchange="zmienCzasPrzystanku(${idx}, this.value)">
+              <button style="background: none; border: none; color: var(--accent-cream); cursor: pointer;" onclick="usunPrzystanekZLinii(${idx})">🗑️</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function dodajPrzystanekDoLiniiEdycja() {
+      const pId = document.getElementById('m-l-dodaj-p-select').value;
+      const pObj = przystankiBaza.find(p => p.id == pId);
+      if (!pObj) return alert("Wybierz przystanek z bazy!");
+
+      tymczasowePrzystankiLinii.push({ id: pObj.id, nazwa: pObj.nazwa, mowiona: pObj.mowiona, czas: 15 });
+      renderPrzystankiWEdytorze();
+    }
+
+    function zmienCzasPrzystanku(idx, val) {
+      tymczasowePrzystankiLinii[idx].czas = parseInt(val) || 10;
+    }
+
+    function usunPrzystanekZLinii(idx) {
+      tymczasowePrzystankiLinii.splice(idx, 1);
+      renderPrzystankiWEdytorze();
+    }
+
+    function zapiszEdycjeLinii() {
+      const numer = document.getElementById('m-l-numer').value.trim();
+      const kierunek = document.getElementById('m-l-kierunek').value.trim();
+      if (!numer) return alert("Podaj numer linii!");
+
+      if (edytowanaLiniaId) {
+        const l = linieBaza.find(x => x.id === edytowanaLiniaId);
+        l.numer = numer;
+        l.kierunek = kierunek;
+        l.przystanki = tymczasowePrzystankiLinii;
+      } else {
+        linieBaza.push({ id: Date.now(), numer, kierunek, przystanki: tymczasowePrzystankiLinii });
+      }
+
+      saveState();
+      zamknijModal('modal-linia');
+      renderGlowneLinie();
+      uaktualnijSelectyLinii();
+    }
+
+    function zamknijModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    function uaktualnijSelectyLinii() {
+      const selectG = document.getElementById('g-select-linia');
+      if (selectG) {
+        selectG.innerHTML = "";
+        linieBaza.forEach(l => selectG.innerHTML += `<option value="${l.numer}">${l.numer} (${l.kierunek})</option>`);
+      }
+    }
+
+    function dodajKierowce() {
+      const name = document.getElementById('k-name').value.trim();
+      const login = document.getElementById('k-login').value.trim();
+      const pass = document.getElementById('k-pass').value.trim();
+
+      if (!name) return alert("Wpisz imię i nazwisko!");
+
+      const newK = { 
+        id: Date.now(), 
+        name, 
+        login: login || name.toLowerCase().replace(/\s+/g, ""), 
+        pass: pass || "kierowca123",
+        assignedLoops: 5,
+        completedLoops: 0,
+        missedLoops: 0,
+        punishmentLoops: 0,
+        isOnBreak: false,
+        lastStopTimestamp: 0,
+        currentStopIdx: 0,
+        currentLoop: 0,
+        activeLine: "Linia 161",
+        statusText: "Postój"
+      };
+
+      kierowcyBaza.push(newK);
+      powiadomieniaBaza[newK.id] = [];
+      saveState();
+
+      document.getElementById('k-name').value = "";
+      document.getElementById('k-login').value = "";
+      document.getElementById('k-pass').value = "kierowca123";
+      renderKierowcy();
+    }
+
+    function usunKierowce(id) {
+      if (confirm("Czy na pewno chcesz usunąć tego kierowcę?")) {
+        kierowcyBaza = kierowcyBaza.filter(k => k.id !== id);
+        delete powiadomieniaBaza[id];
+        saveState();
+        renderKierowcy();
+      }
+    }
+
+    function zmienHasloKierowcy(id) {
+      const k = kierowcyBaza.find(x => x.id === id);
+      if (!k) return;
+      const newPass = prompt(`Wpisz nowe hasło dla kierowcy ${k.name}:`, k.pass);
+      if (newPass !== null && newPass.trim() !== "") {
+        k.pass = newPass.trim();
+        saveState();
+        alert(`Hasło dla ${k.name} zostało zmienione na: ${k.pass}`);
+        renderKierowcy();
+      }
+    }
+
+    function addPunishmentDriver() {
+      const kId = parseInt(document.getElementById('disp-action-kierowca-kursy').value);
+      const extra = parseInt(document.getElementById('disp-extra-loops').value) || 0;
+      const k = kierowcyBaza.find(x => x.id === kId);
+
+      if (!k) return alert("Wybierz kierowcę!");
+
+      k.punishmentLoops += extra;
+      k.assignedLoops += extra;
+
+      if (!powiadomieniaBaza[k.id]) powiadomieniaBaza[k.id] = [];
+      powiadomieniaBaza[k.id].unshift({
+        id: Date.now(),
+        nadawca: "Dyspozytor (KARA ZA KURS)",
+        tresc: `⚠️ DOLICZONO KARĘ: +${extra} dodatkowe kółka za opóźnienie / pominięcie kursu!`,
+        czas: new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+      });
+
+      saveState();
+      alert(`Nałożono karę dla ${k.name}: +${extra} doliczonych kółek.`);
+      renderKierowcy();
+      if(zalogowanyKierowcaObj && zalogowanyKierowcaObj.id === k.id) {
+        odswiezDaneKierowcyHome();
+      }
+    }
+
+    function setDriverBreak(minutes) {
+      const kId = parseInt(document.getElementById('disp-action-kierowca-przerwy').value);
+      const k = kierowcyBaza.find(x => x.id === kId);
+
+      if (!k) return alert("Wybierz kierowcę!");
+
+      k.isOnBreak = true;
+      k.statusText = "Przerwa";
+      if (!powiadomieniaBaza[k.id]) powiadomieniaBaza[k.id] = [];
+      powiadomieniaBaza[k.id].unshift({
+        id: Date.now(),
+        nadawca: "Dyspozytor (PRZERWA)",
+        tresc: `Nałożono przerwę dyspozytorską na okres ${minutes} minut. Kurs zablokowany.`,
+        czas: new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+      });
+
+      saveState();
+      alert(`Zarezerwowano przerwę ${minutes} minut dla kierowcy ${k.name}.`);
+      renderKierowcy();
+
+      setTimeout(() => {
+        k.isOnBreak = false;
+        k.statusText = "Gotowy";
+        powiadomieniaBaza[k.id].unshift({
+          id: Date.now(),
+          nadawca: "Dyspozytor",
+          tresc: "Twoja przerwa została zakończona. Możesz kontynuować kurs.",
+          czas: new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+        });
+        saveState();
+        renderKierowcy();
+      }, minutes * 1000 * 6);
+    }
+
+    function renderKierowcy() {
+      const box = document.getElementById('lista-kierowcow');
+      const selectG = document.getElementById('select-grafik-kierowca');
+      const selectM = document.getElementById('msg-kierowca');
+      const selectAKursy = document.getElementById('disp-action-kierowca-kursy');
+      const selectAPrzerwy = document.getElementById('disp-action-kierowca-przerwy');
+
+      if (box) box.innerHTML = "";
+      if (selectG) selectG.innerHTML = "";
+      if (selectM) selectM.innerHTML = "";
+      if (selectAKursy) selectAKursy.innerHTML = "";
+      if (selectAPrzerwy) selectAPrzerwy.innerHTML = "";
+
+      kierowcyBaza.forEach(k => {
+        if (box) {
+          const lObj = linieBaza.find(x => x.numer === k.activeLine) || linieBaza[0];
+          const trasa = lObj ? lObj.przystanki : [];
+          const currentStopName = trasa[k.currentStopIdx] ? trasa[k.currentStopIdx].nazwa : "Wyjazd na linię / Zajezdnia";
+          const progress = trasa.length > 0 ? Math.round((k.currentStopIdx / trasa.length) * 100) : 0;
+          
+          let badgeClass = "idle";
+          if (k.isOnBreak) badgeClass = "break";
+          else if (k.statusText === "Postój") badgeClass = "stand";
+          else if (k.statusText === "W trakcie kursu") badgeClass = "in-progress";
+
+          const penaltyText = k.punishmentLoops > 0 ? `<span class="penalty-badge">+${k.punishmentLoops} KARNE</span>` : '';
+
+          box.innerHTML += `
+            <div class="live-card">
+              <div class="live-card-header">
+                <div>
+                  <strong>👨‍✈️ ${k.name}</strong>
+                  <span style="font-size: 11px; color: var(--text-dim); margin-left: 4px;">(${k.login})</span>
+                </div>
+                <span class="status-badge ${badgeClass}">${k.isOnBreak ? 'PRZERWA' : k.statusText}</span>
+              </div>
+              
+              <div style="font-size: 11px; color: #ccc;">
+                📍 Aktywna Linia: <strong>${k.activeLine}</strong> | Kółko: <strong>${k.completedLoops + 1}/${k.assignedLoops}</strong> ${penaltyText}
+              </div>
+
+              <div style="font-size: 11px; color: var(--text-dim);">
+                🚏 Obecny przystanek: <strong style="color: #fff;">${currentStopName}</strong>
+              </div>
+
+              <div class="live-progress-bar">
+                <div class="live-progress-fill" style="width: ${progress}%;"></div>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
+                <span style="font-size: 10px; color: var(--text-dim);">Kółka: ${k.completedLoops}/${k.assignedLoops}</span>
+                <div>
+                  <button style="background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 2px 6px; border-radius: 4px; cursor: pointer; font-size: 10px;" onclick="zmienHasloKierowcy(${k.id})">🔑 Hasło</button>
+                  <button style="background: none; border: none; color: var(--accent-cream); cursor: pointer; font-size: 10px;" onclick="usunKierowce(${k.id})">🗑️ Usun</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        if (selectG) selectG.innerHTML += `<option value="${k.id}">${k.name}</option>`;
+        if (selectM) selectM.innerHTML += `<option value="${k.id}">${k.name}</option>`;
+        if (selectAKursy) selectAKursy.innerHTML += `<option value="${k.id}">${k.name}</option>`;
+        if (selectAPrzerwy) selectAPrzerwy.innerHTML += `<option value="${k.id}">${k.name}</option>`;
+      });
+
+      uaktualnijSelectyLinii();
+      generujKalendarzGrafikaDyspozytora();
+    }
+
+    let wybranyDzienDyspozytor = null;
+
+    function generujKalendarzGrafikaDyspozytora() {
+      const grid = document.getElementById('disp-cal-grid');
+      if (!grid) return;
+      grid.innerHTML = "";
+
+      const dni = ['Pon', 'Wt', 'Śr', 'Czw', 'Pt', 'Sob', 'Nie'];
+      dni.forEach(d => grid.innerHTML += `<div style="text-align:center; font-size:10px; font-weight:800; color:var(--text-dim);">${d}</div>`);
+
+      for (let i = 0; i < 5; i++) grid.innerHTML += `<div></div>`;
+
+      const selectG = document.getElementById('select-grafik-kierowca');
+      const kId = selectG ? selectG.value : null;
+
+      for (let d = 1; d <= 31; d++) {
+        let sluzba = (kId && grafikBaza[`${kId}_${d}`]) ? grafikBaza[`${kId}_${d}`] : null;
+        const isSel = (wybranyDzienDyspozytor === d);
+
+        grid.innerHTML += `
+          <div class="day-box ${sluzba ? 'has-shift' : ''} ${isSel ? 'selected' : ''}" onclick="wybierzDzienGrafikaDisp(${d})">
+            <strong style="font-size:11px;">${d}</strong>
+            <div style="font-size:9px; color:${sluzba ? 'var(--accent-cream)' : '#888'};">
+              ${sluzba ? `${sluzba.linia} (${sluzba.koleka}k)` : 'WOLNE'}
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function wybierzDzienGrafikaDisp(d) {
+      wybranyDzienDyspozytor = d;
+      document.getElementById('wybrany-dzien-label').innerText = `Wybrany Dzień: ${d} Sierpnia 2026`;
+      generujKalendarzGrafikaDyspozytora();
+    }
+
+    function zaladujGrafikKierowcy() {
+      wybranyDzienDyspozytor = null;
+      document.getElementById('wybrany-dzien-label').innerText = `Wybrany Dzień: Brak`;
+      generujKalendarzGrafikaDyspozytora();
+    }
+
+    function zapiszSluzbeDoGrafika() {
+      if (!wybranyDzienDyspozytor) return alert("Wybierz dzień z kalendarza!");
+      const selectG = document.getElementById('select-grafik-kierowca');
+      const kId = selectG ? selectG.value : null;
+      if (!kId) return alert("Wybierz kierowcę!");
+
+      const linia = document.getElementById('g-select-linia').value;
+      const koleka = parseInt(document.getElementById('g-koolka').value) || 5;
+      const przerwaPo = parseInt(document.getElementById('g-przerwa-po-kolku').value) || 2;
+      const przerwaCzas = parseInt(document.getElementById('g-przerwa-czas').value) || 15;
+
+      grafikBaza[`${kId}_${wybranyDzienDyspozytor}`] = { linia, koleka, przerwaPo, przerwaCzas };
+
+      if (!powiadomieniaBaza[kId]) powiadomieniaBaza[kId] = [];
+      const now = new Date();
+      powiadomieniaBaza[kId].unshift({
+        id: Date.now(),
+        nadawca: "Dyspozytornia (Grafik)",
+        tresc: `Przypisano służbę na dzień ${wybranyDzienDyspozytor} Sierpnia: ${linia}, Kółek: ${koleka}. Przerwa (${przerwaCzas} min) zaplanowana po ${przerwaPo} kółku.`,
+        czas: now.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+      });
+
+      saveState();
+      alert(`✅ Przypisano służbę i przerwę!\nPowiadomienie trafiło do kierowcy.`);
+      generujKalendarzGrafikaDyspozytora();
+    }
+
+    function wyslijWiadomoscOdDyspozytora() {
+      const kId = document.getElementById('msg-kierowca').value;
+      const tytul = document.getElementById('msg-tytul').value.trim();
+      const tresc = document.getElementById('msg-tresc').value.trim();
+
+      if (!kId) return alert("Wybierz odbiorcę!");
+      if (!tresc) return alert("Wpisz treść wiadomości!");
+
+      if (!powiadomieniaBaza[kId]) powiadomieniaBaza[kId] = [];
+      const now = new Date();
+      powiadomieniaBaza[kId].unshift({
+        id: Date.now(),
+        nadawca: `Dyspozytor (${tytul})`,
+        tresc: tresc,
+        czas: now.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+      });
+
+      saveState();
+      alert("📩 Powiadomienie wysłane do kierowcy!");
+      document.getElementById('msg-tresc').value = "";
+    }
+
+    function removeDriverNotification(kierowcaId, notifId) {
+      if (powiadomieniaBaza[kierowcaId]) {
+        powiadomieniaBaza[kierowcaId] = powiadomieniaBaza[kierowcaId].filter(n => n.id !== notifId);
+        saveState();
+        if (zalogowanyKierowcaObj && zalogowanyKierowcaObj.id === kierowcaId) {
+          renderDriverPowiadomienia();
+        }
+      }
+    }
+
+    function renderDispProsby() {
+      const box = document.getElementById('disp-prosoby-lista');
+      if (!box) return;
+      box.innerHTML = "";
+
+      if (prosbyBaza.length === 0) {
+        box.innerHTML = `<div style="color: var(--text-dim); font-size: 12px; text-align: center; padding: 15px;">Brak nowych zgłoszeń od kierowców.</div>`;
+        return;
+      }
+
+      prosbyBaza.forEach((p, index) => {
+        box.innerHTML += `
+          <div class="list-item" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+            <div style="display: flex; justify-content: space-between; width: 100%;">
+              <strong>👨‍✈️ ${p.kierowcaName} - <span style="color:var(--accent-cream);">${p.typ}</span></strong>
+              <span style="font-size: 10px; color: var(--text-dim);">${p.czas}</span>
+            </div>
+            <p style="font-size: 12px; color: #ccc;">"${p.powod}"</p>
+            <div style="display: flex; gap: 6px; width: 100%; margin-top: 4px;">
+              <button class="btn-maroon" style="height: 28px; font-size: 10px;" onclick="odpowiedzNaProsbe(${index}, true)">Akceptuj ✓</button>
+              <button class="btn-maroon" style="height: 28px; font-size: 10px; background: #333;" onclick="odpowiedzNaProsbe(${index}, false)">Odrzuć ✕</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function odpowiedzNaProsbe(index, czyZaakceptowano) {
+      const p = prosbyBaza[index];
+      const kId = p.kierowcaId;
+      const statusStr = czyZaakceptowano ? "ZAAKCEPTOWANA" : "ODRZUCONA";
+
+      if (!powiadomieniaBaza[kId]) powiadomieniaBaza[kId] = [];
+      const now = new Date();
+      powiadomieniaBaza[kId].unshift({
+        id: Date.now(),
+        nadawca: "Dyspozytor",
+        tresc: `Twoja prośba (${p.typ}) została ${statusStr}.`,
+        czas: new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+      });
+
+      prosbyBaza.splice(index, 1);
+      saveState();
+      renderDispProsby();
+      alert(`Wysłano odpowiedź do kierowcy: Prośba ${statusStr}.`);
+    }
+
+    /* LOGIKA KIEROWCY I ZAPOWIEDZI */
+    let currentLoopCount = 0;
+    let currentStopIndex = 0;
+    let timerInterval = null;
+    let boardingInterval = null;
+    let announcementTimeout = null;
+    let timeRemaining = 0;
+    let boardingTimeRemaining = 0;
+    
+    let isDrivePaused = false;
+    let isStandActive = false;
+    let isWyjazdNaLinie = true; 
+    let isZjazdDoZajezdni = false; 
+    let pausedPhase = 'driving';
+
+    function odswiezDaneKierowcyHome() {
+      document.getElementById('driver-display-name').innerText = zalogowanyKierowcaObj.name;
+
+      const now = new Date();
+      const dzisiejszyDzien = now.getDate();
+      const key = `${zalogowanyKierowcaObj.id}_${dzisiejszyDzien}`;
+      const sluzba = grafikBaza[key];
+
+      const goalLoops = sluzba ? sluzba.koleka : zalogowanyKierowcaObj.assignedLoops;
+
+      document.getElementById('driver-today-line').innerText = isZjazdDoZajezdni ? "ZAJ (Zjazd do zajezdni)" : (isWyjazdNaLinie ? "WYJ (Wyjazd na linię)" : (sluzba ? sluzba.linia : "Linia 161"));
+      document.getElementById('driver-today-loops-goal').innerText = `${goalLoops} kółek`;
+      document.getElementById('max-loops-num').innerText = goalLoops;
+
+      const penaltyTag = zalogowanyKierowcaObj.punishmentLoops > 0 ? `<span class="penalty-badge">+${zalogowanyKierowcaObj.punishmentLoops} KARNE</span>` : '';
+      document.getElementById('driver-penalty-tag').innerHTML = penaltyTag;
+      document.getElementById('active-penalty-tag').innerHTML = penaltyTag;
+
+      document.getElementById('driver-completed-loops-val').innerText = zalogowanyKierowcaObj.completedLoops;
+    }
+
+    function pobierzAktualnaLinieKierowcy() {
+      const now = new Date();
+      const key = `${zalogowanyKierowcaObj.id}_${now.getDate()}`;
+      const sluzba = grafikBaza[key];
+      let liniaNazwa = sluzba ? sluzba.linia : "Linia 161";
+
+      let lObj = linieBaza.find(x => x.numer === liniaNazwa);
+      if (!lObj && linieBaza.length > 0) lObj = linieBaza[0];
+      return lObj;
+    }
+
+    function getAktualnaTrasaKierowcy() {
+      if (isWyjazdNaLinie || isZjazdDoZajezdni) return [];
+      const lObj = pobierzAktualnaLinieKierowcy();
+      if (!lObj) return [];
+
+      let list = [...lObj.przystanki];
+      if (currentLoopCount % 2 !== 0) {
+        list.reverse();
+      }
+      return list;
+    }
+
+    function renderStopsKierowcy() {
+      const container = document.getElementById('stops-list');
+      if(!container) return;
+      container.innerHTML = '';
+
+      if (isWyjazdNaLinie) {
+        document.getElementById('active-line-name').innerText = "WYJ";
+        document.getElementById('active-route-title').innerText = "WYJAZD NA LINIĘ";
+        document.getElementById('driver-today-dir').innerText = "Trasa: Wyjazd z zajezdni na linię";
+        document.getElementById('timer-label').innerText = "WYJAZD NA LINIĘ";
+        document.getElementById('timer').innerText = "--:--";
+        container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-dim); font-size:13px; font-weight:600;">🚌 Wyjazd na linię...<br><span style="font-size:11px; color:#aaa; margin-top:4px; display:block;">Kliknij "ZACZNIJ KURS", aby rozpocząć kółko.</span></div>`;
+        return;
+      }
+
+      if (isZjazdDoZajezdni) {
+        document.getElementById('active-line-name').innerText = "ZAJ";
+        document.getElementById('active-route-title').innerText = "ZJAZD DO ZAJEZDNI";
+        document.getElementById('driver-today-dir').innerText = "Trasa: Zjazd do zajezdni (brak przystanków)";
+        document.getElementById('timer-label').innerText = "ZJAZD DO ZAJEZDNI";
+        document.getElementById('timer').innerText = "--:--";
+        container.innerHTML = `<div style="text-align:center; padding:20px; color:#ff8888; font-size:13px; font-weight:600;">🛑 Zjazd do zajezdni (ZAJ)<br><span style="font-size:11px; color:#aaa; margin-top:4px; display:block;">Kurs zakończony. Czas wstrzymany.</span></div>`;
+        return;
+      }
+
+      const lObj = pobierzAktualnaLinieKierowcy();
+      const trasa = getAktualnaTrasaKierowcy();
+      const isForward = (currentLoopCount % 2 === 0);
+      const targetStop = trasa.length > 0 ? trasa[trasa.length - 1].nazwa : "";
+      const dirText = isForward ? (lObj ? `${lObj.kierunek}` : "Północ ➔ Południe") : `Kierunek: ${targetStop}`;
+
+      document.getElementById('active-line-name').innerText = lObj ? lObj.numer : "Linia 161";
+      document.getElementById('active-route-title').innerText = dirText;
+      document.getElementById('driver-today-dir').innerText = `Trasa: ${dirText}`;
+      document.getElementById('current-loop-num').innerText = currentLoopCount + 1;
+
+      trasa.forEach((p, index) => {
+        let cls = '';
+        if (index < currentStopIndex) cls = 'passed';
+        if (index === currentStopIndex) cls = 'active';
+
+        container.innerHTML += `
+          <div class="stop-row ${cls}">
+            <div>
+              <strong>${p.nazwa}</strong>
+              <div style="font-size: 10px; color: var(--text-dim);">Dojazd: ${p.czas}s</div>
+            </div>
+            <span style="font-weight: 700; font-size: 11px;">${index < currentStopIndex ? 'ZALICZONY ✓' : (index === currentStopIndex ? 'TERAZ' : 'OCZEKUJE')}</span>
+          </div>
+        `;
+      });
+    }
+
+    function rozpoczniWyjazdNaLinie() {
+      clearInterval(timerInterval);
+      clearInterval(boardingInterval);
+
+      isWyjazdNaLinie = true;
+      isZjazdDoZajezdni = false;
+
+      const btnStart = document.getElementById('btn-start-drive');
+      if (btnStart) {
+        btnStart.innerText = "ZACZNIJ KURS ▶";
+        btnStart.onclick = startJazdaKierowca;
+      }
+
+      renderStopsKierowcy();
+      czytajTekst("Wyjazd na linię. Prosimy nie wsiadać.");
+    }
+
+    function startJazdaKierowca() {
+      if (zalogowanyKierowcaObj.isOnBreak) {
+        alert("Wstrzymano: Jesteś na przerwie ustalonej przez dyspozytora!");
+        return;
+      }
+
+      const now = new Date();
+      const key = `${zalogowanyKierowcaObj.id}_${now.getDate()}`;
+      const sluzba = grafikBaza[key];
+      const maxKoolka = sluzba ? sluzba.koleka : zalogowanyKierowcaObj.assignedLoops;
+
+      if (currentLoopCount >= maxKoolka) {
+        alert("Wszystkie kółka zaplanowane na dzisiaj zostały ukończone!");
+        return;
+      }
+
+      isWyjazdNaLinie = false;
+      isZjazdDoZajezdni = false;
+
+      const btnStart = document.getElementById('btn-start-drive');
+      if (btnStart) {
+        btnStart.innerText = "WYJAZD (WYJ)";
+        btnStart.onclick = rozpoczniWyjazdNaLinie;
+      }
+
+      document.getElementById('sidebar').classList.add('hidden');
+      const card = document.getElementById('kurs-main-card');
+      card.classList.remove('start-glow-active');
+      void card.offsetWidth;
+      card.classList.add('start-glow-active');
+
+      zalogowanyKierowcaObj.statusText = "W trakcie kursu";
+      saveState();
+
+      document.getElementById('driver-status-text').innerText = "W trakcie kursu";
+      document.getElementById('driver-status-text').style.color = "var(--accent-cream)";
+      document.getElementById('loop-overlay').style.display = 'none';
+
+      const statusBanner = document.getElementById('course-status-banner');
+      statusBanner.style.display = 'none';
+      statusBanner.classList.remove('stop-mode');
+
+      isDrivePaused = false;
+      isStandActive = false;
+
+      const btnStop = document.getElementById('btn-stop-drive');
+      if (btnStop) {
+        btnStop.innerText = "ZATRZYMAJ";
+        btnStop.className = "btn-maroon btn-drive-stop";
+      }
+
+      const btnStand = document.getElementById('btn-stand-drive');
+      if (btnStand) {
+        btnStand.innerText = "POSTÓJ";
+        btnStand.className = "btn-maroon btn-drive-stand";
+        btnStand.onclick = togglePostojKurs;
+      }
+
+      currentStopIndex = 0;
+      zalogowanyKierowcaObj.currentStopIdx = 0;
+      saveState();
+      renderStopsKierowcy();
+
+      const lObj = pobierzAktualnaLinieKierowcy();
+      const trasa = getAktualnaTrasaKierowcy();
+      const celStop = trasa.length > 0 ? trasa[trasa.length - 1].mowiona : "";
+
+      czytajTekst(`${lObj ? lObj.numer : 'Linia'}, kierunek: ${celStop}.`, true);
+      startTimerForStop();
+    }
+
+    function startTimerForStop(customStartSec) {
+      clearInterval(timerInterval);
+      clearInterval(boardingInterval);
+      const trasa = getAktualnaTrasaKierowcy();
+
+      if (currentStopIndex >= trasa.length) {
+        pokazKoniecKolka();
+        return;
+      }
+
+      const timerElem = document.getElementById('timer');
+      const btnNext = document.getElementById('btn-next-stop');
+      
+      timerElem.style.color = "var(--accent-cream)";
+      if(btnNext) btnNext.disabled = false;
+
+      document.getElementById('timer-label').innerText = "DO NASTĘPNEGO PRZYSTANKU";
+      pausedPhase = 'driving';
+      timeRemaining = (customStartSec !== undefined) ? customStartSec : trasa[currentStopIndex].czas;
+      updateTimerDisplay(timeRemaining);
+
+      timerInterval = setInterval(() => {
+        timeRemaining--;
+        updateTimerDisplay(timeRemaining);
+
+        if (timeRemaining <= 0) {
+          clearInterval(timerInterval);
+          startBoardingPhase();
+        }
+      }, 1000);
+    }
+
+    function startBoardingPhase(customStartSec) {
+      const trasa = getAktualnaTrasaKierowcy();
+      const currStop = trasa[currentStopIndex];
+
+      document.getElementById('timer-label').innerText = "WSIADANIE / WYSIADANIE";
+      pausedPhase = 'boarding';
+      
+      const timerElem = document.getElementById('timer');
+      const btnNext = document.getElementById('btn-next-stop');
+
+      timerElem.style.color = "#e2b86b";
+      if(btnNext) btnNext.disabled = true;
+
+      if (currStop && customStartSec === undefined) {
+        const isLast = (currentStopIndex === trasa.length - 1);
+        if (isLast) {
+          czytajTekst(`Przystanek: ${currStop.mowiona}, przystanek końcowy, prosimy wysiąść z autobusu`, true);
+        } else {
+          czytajTekst(`Przystanek: ${currStop.mowiona}`, true);
+        }
+      }
+
+      boardingTimeRemaining = (customStartSec !== undefined) ? customStartSec : 15;
+      updateTimerDisplay(boardingTimeRemaining);
+
+      boardingInterval = setInterval(() => {
+        boardingTimeRemaining--;
+        updateTimerDisplay(boardingTimeRemaining);
+
+        if (boardingTimeRemaining <= 0) {
+          clearInterval(boardingInterval);
+          
+          if(btnNext) btnNext.disabled = false;
+          timerElem.style.color = "var(--accent-cream)";
+
+          if (currentStopIndex < trasa.length - 1) {
+            currentStopIndex++;
+            zalogowanyKierowcaObj.currentStopIdx = currentStopIndex;
+            saveState();
+            renderStopsKierowcy();
+
+            const nxtStop = trasa[currentStopIndex];
+            if (nxtStop) {
+              czytajTekst(`Następny przystanek: ${nxtStop.mowiona}`, true);
+            }
+
+            startTimerForStop();
+          } else {
+            nastPrzystanek();
+          }
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay(sec) {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      document.getElementById('timer').innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function registerNextStop() {
+      if (zalogowanyKierowcaObj.isOnBreak) {
+        alert("Masz obecnie przerwę dyspozytorską! Kurs jest zablokowany.");
+        return;
+      }
+
+      if (isWyjazdNaLinie || isZjazdDoZajezdni) {
+        alert("Obecnie jesteś w trybie wyjazdu lub zjazdu do zajezdni – brak przystanków na trasie!");
+        return;
+      }
+
+      const now = Date.now();
+      const cooldown = 10000;
+      const alertBar = document.getElementById('cooldown-alert-bar');
+      const btnNext = document.getElementById('btn-next-stop');
+
+      if (now - zalogowanyKierowcaObj.lastStopTimestamp < cooldown) {
+        const remainingSec = Math.ceil((cooldown - (now - zalogowanyKierowcaObj.lastStopTimestamp)) / 1000);
+        alert(`Zbyt szybkie kliknięcie! Odczekaj ${remainingSec}s przed zaliczeniem kolejnego przystanku.`);
+        return;
+      }
+
+      zalogowanyKierowcaObj.lastStopTimestamp = now;
+      saveState();
+      btnNext.disabled = true;
+
+      let leftSec = 10;
+      alertBar.style.display = 'block';
+      alertBar.innerText = `⏳ Odczekaj ${leftSec}s...`;
+
+      const cInterval = setInterval(() => {
+        leftSec--;
+        if (leftSec > 0) {
+          alertBar.innerText = `⏳ Odczekaj ${leftSec}s...`;
+        } else {
+          clearInterval(cInterval);
+          alertBar.style.display = 'none';
+          btnNext.disabled = false;
+        }
+      }, 1000);
+
+      clearInterval(timerInterval);
+      clearInterval(boardingInterval);
+      nastPrzystanek();
+    }
+
+    function nastPrzystanek() {
+      const trasa = getAktualnaTrasaKierowcy();
+
+      if (currentStopIndex < trasa.length - 1) {
+        currentStopIndex++;
+        zalogowanyKierowcaObj.currentStopIdx = currentStopIndex;
+        saveState();
+        renderStopsKierowcy();
+
+        const nxtStop = trasa[currentStopIndex];
+        if (nxtStop) {
+          czytajTekst(`Następny przystanek: ${nxtStop.mowiona}`, true);
+        }
+
+        startTimerForStop();
+      } else {
+        clearInterval(timerInterval);
+        clearInterval(boardingInterval);
+        clearTimeout(announcementTimeout);
+
+        currentStopIndex++;
+        zalogowanyKierowcaObj.currentStopIdx = currentStopIndex;
+        saveState();
+        renderStopsKierowcy();
+        pokazKoniecKolka();
+      }
+    }
+
+    function toggleZatrzymajWznowKurs() {
+      const btnStop = document.getElementById('btn-stop-drive');
+      const statusBanner = document.getElementById('course-status-banner');
+
+      if (!isDrivePaused) {
+        clearInterval(timerInterval);
+        clearInterval(boardingInterval);
+        isDrivePaused = true;
+        isStandActive = false;
+
+        zalogowanyKierowcaObj.statusText = "Zatrzymany";
+        saveState();
+
+        document.getElementById('driver-status-text').innerText = "Zatrzymany";
+        document.getElementById('driver-status-text').style.color = "var(--accent-cream-dim)";
+
+        btnStop.innerText = "WZNOWIĆ ▶";
+        btnStop.className = "btn-maroon btn-drive-resume";
+
+        statusBanner.style.display = 'block';
+        statusBanner.classList.add('stop-mode');
+        statusBanner.innerText = '⏸️ KURS ZATRZYMANY - KLIKNIJ "WZNOWIĆ ▶" ABY KONTYNUOWAĆ';
+
+        czytajTekst("Kurs został zatrzymany.");
+      } else {
+        isDrivePaused = false;
+
+        zalogowanyKierowcaObj.statusText = "W trakcie kursu";
+        saveState();
+
+        document.getElementById('driver-status-text').innerText = "W trakcie kursu";
+        document.getElementById('driver-status-text').style.color = "var(--accent-cream)";
+
+        btnStop.innerText = "ZATRZYMAJ";
+        btnStop.className = "btn-maroon btn-drive-stop";
+
+        statusBanner.style.display = 'none';
+        statusBanner.classList.remove('stop-mode');
+
+        czytajTekst("Wznawiam kurs.");
+
+        if (!isWyjazdNaLinie && !isZjazdDoZajezdni) {
+          if (pausedPhase === 'driving') {
+            startTimerForStop(timeRemaining);
+          } else {
+            startBoardingPhase(boardingTimeRemaining);
+          }
+        }
+      }
+    }
+
+    function togglePostojKurs() {
+      const btnStand = document.getElementById('btn-stand-drive');
+      const btnStop = document.getElementById('btn-stop-drive');
+      const statusBanner = document.getElementById('course-status-banner');
+
+      if (!isStandActive) {
+        clearInterval(timerInterval);
+        clearInterval(boardingInterval);
+        isStandActive = true;
+        isDrivePaused = false;
+
+        if (btnStop) {
+          btnStop.innerText = "ZATRZYMAJ";
+          btnStop.className = "btn-maroon btn-drive-stop";
+        }
+
+        zalogowanyKierowcaObj.statusText = "Postój";
+        saveState();
+
+        document.getElementById('driver-status-text').innerText = "Postój";
+        document.getElementById('driver-status-text').style.color = "#d8e6be";
+
+        btnStand.innerText = "KOŃCZĘ PRZERWĘ ▶";
+        btnStand.className = "btn-maroon btn-drive-start";
+
+        statusBanner.style.display = 'block';
+        statusBanner.classList.remove('stop-mode');
+        statusBanner.innerText = '☕ PRZERWA / POSTÓJ - KLIKNIJ "KOŃCZĘ PRZERWĘ" ABY WRÓCIĆ NA TRASĘ';
+
+        czytajTekst("Autobus przechodzi w tryb postoju.");
+      } else {
+        isStandActive = false;
+
+        zalogowanyKierowcaObj.statusText = "W trakcie kursu";
+        saveState();
+
+        document.getElementById('driver-status-text').innerText = "W trakcie kursu";
+        document.getElementById('driver-status-text').style.color = "var(--accent-cream)";
+
+        btnStand.innerText = "POSTÓJ";
+        btnStand.className = "btn-maroon btn-drive-stand";
+
+        statusBanner.style.display = 'none';
+
+        czytajTekst("Kończę przerwę. Wznawiam kurs na mojej linii.");
+
+        if (isWyjazdNaLinie) {
+          rozpoczniWyjazdNaLinie();
+        } else {
+          renderStopsKierowcy();
+          if (pausedPhase === 'driving') {
+            startTimerForStop(timeRemaining);
+          } else {
+            startBoardingPhase(boardingTimeRemaining);
+          }
+        }
+      }
+    }
+
+    function wyglosWybranaZapowiedz() {
+      const select = document.getElementById('quick-announcement-select');
+      if (select && select.value) {
+        if (isStopAnnouncementPlaying && 'speechSynthesis' in window && window.speechSynthesis.speaking) {
+          alert("Obecnie odtwarzana jest oficjalna zapowiedź przystankowa. Odczekaj chwilę!");
+          return;
+        }
+
+        const val = select.value;
+        czytajTekst(val, false);
+
+        if (val.includes("Zjazd do zajezdni") || val.includes("zjazd do zajezdni")) {
+          isZjazdDoZajezdni = true;
+          isWyjazdNaLinie = false;
+          clearInterval(timerInterval);
+          clearInterval(boardingInterval);
+          renderStopsKierowcy();
+        } else if (val.includes("wyjazd na linię")) {
+          rozpoczniWyjazdNaLinie();
+        }
+      }
+    }
+
+    function pokazKoniecKolka() {
+      currentLoopCount++;
+      zalogowanyKierowcaObj.completedLoops = currentLoopCount;
+      saveState();
+
+      document.getElementById('driver-completed-loops-val').innerText = currentLoopCount;
+
+      const now = new Date();
+      const key = `${zalogowanyKierowcaObj.id}_${now.getDate()}`;
+      const sluzba = grafikBaza[key];
+      const maxKoolka = sluzba ? sluzba.koleka : zalogowanyKierowcaObj.assignedLoops;
+
+      const overlay = document.getElementById('loop-overlay');
+      const title = document.getElementById('overlay-title');
+      const desc = document.getElementById('overlay-desc');
+      const btn = document.getElementById('btn-next-loop-action');
+
+      overlay.style.display = 'flex';
+
+      if (sluzba && sluzba.przerwaPo && currentLoopCount === sluzba.przerwaPo) {
+        title.innerText = `Czas na przerwę! ☕`;
+        desc.innerText = `Rozpoczynasz przerwę (${sluzba.przerwaCzas} min).`;
+        btn.innerText = "KOŃCZĘ PRZERWĘ ▶";
+        btn.style.display = "inline-flex";
+        zalogowanyKierowcaObj.isOnBreak = true;
+        zalogowanyKierowcaObj.statusText = "Przerwa";
+        saveState();
+
+        setTimeout(() => {
+          zalogowanyKierowcaObj.isOnBreak = false;
+          zalogowanyKierowcaObj.statusText = "Gotowy";
+          saveState();
+        }, sluzba.przerwaCzas * 1000 * 6);
+
+        czytajTekst(`Koniec kółka. Czas na przerwę ${sluzba.przerwaCzas} minut.`, true);
+        return;
+      }
+
+      if (currentLoopCount < maxKoolka) {
+        title.innerText = `Skończono ${currentLoopCount} z ${maxKoolka} kółek!`;
+        desc.innerText = `Następny kurs rozpocznie się w odwrotnym kierunku.`;
+        btn.innerText = "Zacznij kolejny kurs ▶";
+        btn.style.display = "inline-flex";
+        zalogowanyKierowcaObj.statusText = "Postój";
+        saveState();
+        czytajTekst(`Koniec kursu. Ukończono ${currentLoopCount} z ${maxKoolka} kółek.`, true);
+      } else {
+        isZjazdDoZajezdni = true;
+        isWyjazdNaLinie = false;
+        renderStopsKierowcy();
+
+        title.innerText = `Ukończono wszystkie ${maxKoolka} kółek! 🎉`;
+        desc.innerText = "Dzień pracy zakończony! Zjazd do zajezdni (ZAJ).";
+        btn.style.display = "none";
+        zalogowanyKierowcaObj.statusText = "Zakończono służbę";
+        saveState();
+
+        document.getElementById('driver-status-text').innerText = "Zakończono służbę";
+        document.getElementById('driver-status-text').style.color = "var(--accent-cream)";
+        czytajTekst("Ukończono wszystkie kółka. Prosimy wysiąść z pojazdu, przejazd techniczny, zjazd do zajezdni.", true);
+      }
+    }
+
+    function rozpocznijKolejneKolko() {
+      if (zalogowanyKierowcaObj.isOnBreak) {
+        alert("Nadal trwa Twoja zaplanowana przerwa!");
+        return;
+      }
+      document.getElementById('loop-overlay').style.display = 'none';
+      startJazdaKierowca();
+    }
+
+    function obslugaZmianyTypuProsby() {
+      const selectTyp = document.getElementById('p-typ').value;
+      const boxWlasny = document.getElementById('container-wlasny-temat');
+      if (selectTyp === "Własny temat") {
+        boxWlasny.style.display = "block";
+      } else {
+        boxWlasny.style.display = "none";
+      }
+    }
+
+    let recognition = null;
+
+    function startVoiceRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert("Twoja przeglądarka nie wspiera dyktowania głosowego!");
+        return;
+      }
+
+      recognition = new SpeechRecognition();
+      recognition.lang = 'pl-PL';
+      recognition.interimResults = false;
+
+      recognition.onstart = function() {
+        document.getElementById('btn-start-voice').style.display = 'none';
+        document.getElementById('btn-stop-voice').style.display = 'inline-flex';
+      };
+
+      recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        const txtArea = document.getElementById('p-powod');
+        txtArea.value = txtArea.value ? txtArea.value + " " + transcript : transcript;
+      };
+
+      recognition.onerror = function(event) {
+        alert("Błąd podczas nagrywania głosu: " + event.error);
+        stopVoiceRecognition();
+      };
+
+      recognition.onend = function() {
+        stopVoiceRecognition();
+      };
+
+      recognition.start();
+    }
+
+    function stopVoiceRecognition() {
+      if (recognition) {
+        recognition.stop();
+        recognition = null;
+      }
+      document.getElementById('btn-start-voice').style.display = 'inline-flex';
+      document.getElementById('btn-stop-voice').style.display = 'none';
+    }
+
+    function wyslijProsbeKierowcy() {
+      const selectTyp = document.getElementById('p-typ').value;
+      let finalTyp = selectTyp;
+
+      if (selectTyp === "Własny temat") {
+        const customTitle = document.getElementById('p-wlasny-temat').value.trim();
+        if (!customTitle) return alert("Wpisz temat swojego zgłoszenia!");
+        finalTyp = customTitle;
+      }
+
+      const powod = document.getElementById('p-powod').value.trim();
+      if (!powod) return alert("Wpisz treść prośby!");
+
+      const now = new Date();
+      prosbyBaza.unshift({
+        kierowcaId: zalogowanyKierowcaObj.id,
+        kierowcaName: zalogowanyKierowcaObj.name,
+        typ: finalTyp,
+        powod: powod,
+        czas: now.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+      });
+
+      saveState();
+      alert("Twoja prośba została wysłana do dyspozytora.");
+      document.getElementById('p-powod').value = "";
+      document.getElementById('p-wlasny-temat').value = "";
+    }
+
+    function renderDriverPowiadomienia() {
+      const fullList = document.getElementById('driver-full-notif-list');
+      const homeList = document.getElementById('driver-home-notif-list');
+
+      if(!fullList || !homeList) return;
+
+      fullList.innerHTML = '';
+      homeList.innerHTML = '';
+
+      const list = powiadomieniaBaza[zalogowanyKierowcaObj.id] || [];
+
+      list.forEach(n => {
+        fullList.innerHTML += `
+          <div class="list-item" style="flex-direction: row; justify-content: space-between;">
+            <div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <strong>${n.nadawca}</strong>
+                <span style="font-size: 10px; color: var(--text-dim);">${n.czas}</span>
+              </div>
+              <p style="color: #e0e0e0; font-size: 12px; margin-top: 2px;">${n.tresc}</p>
+            </div>
+            <div style="display:flex; gap:4px;">
+              <button class="btn-maroon" style="width: auto; padding: 4px 8px; font-size: 10px;" onclick="czytajTekst('${n.nadawca} mówi: ${n.tresc}', false)">🔊 Czytaj</button>
+              <button class="btn-maroon" style="width: auto; padding: 4px 8px; font-size: 10px; background:#333;" onclick="removeDriverNotification(${zalogowanyKierowcaObj.id}, ${n.id})">🗑️ Usuń</button>
+            </div>
+          </div>
+        `;
+      });
+
+      if (list.length > 0) {
+        const first = list[0];
+        homeList.innerHTML = `
+          <div class="list-item">
+            <div>
+              <strong>${first.nadawca} (${first.czas})</strong>
+              <p style="color: var(--text-dim); font-size: 12px; margin-top: 2px;">${first.tresc}</p>
+            </div>
+            <button class="btn-maroon" style="width: auto; padding: 4px 8px; font-size: 10px;" onclick="czytajTekst('${first.nadawca} mówi: ${first.tresc}', false)">🔊 Czytaj</button>
+          </div>
+        `;
+      } else {
+        homeList.innerHTML = `<div style="color: var(--text-dim); font-size: 11px;">Brak powiadomień.</div>`;
+      }
+    }
+
+    function generujKalendarzKierowcy() {
+      const grid = document.getElementById('driver-cal-grid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      const dniTygodnia = ['Pon', 'Wt', 'Śr', 'Czw', 'Pt', 'Sob', 'Nie'];
+      dniTygodnia.forEach(dzien => grid.innerHTML += `<div style="text-align: center; font-weight: 800; font-size: 11px; color: var(--text-dim);">${dzien}</div>`);
+
+      for (let i = 0; i < 5; i++) grid.innerHTML += `<div></div>`;
+
+      for (let i = 1; i <= 31; i++) {
+        const key = `${zalogowanyKierowcaObj.id}_${i}`;
+        const sluzba = grafikBaza[key];
+        grid.innerHTML += `
+          <div class="day-box ${sluzba ? 'work' : ''}">
+            <strong style="font-size:11px;">${i}</strong>
+            <div style="font-size:9px; color:${sluzba ? 'var(--accent-cream)' : '#666'};">
+              ${sluzba ? `${sluzba.linia} (${sluzba.koleka}k)` : 'WOLNE'}
+            </div>
+          </div>
+        `;
+      }
+    }
+  </script>
+</body>
+</html>
