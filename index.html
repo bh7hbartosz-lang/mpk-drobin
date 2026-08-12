@@ -3,11 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>MPK Drobin - Zintegrowany System Transportowy</title>
+  <title>MPK Drobin - Zintegrowany System Transportowy (Supabase)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
+  <!-- SUPABASE JS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
     :root {
       --bg-dark: #0a0a0a;
@@ -41,7 +44,6 @@
       top: -20%; right: -10%; filter: blur(90px); pointer-events: none; z-index: 1;
     }
 
-    /* EKRAN LOGOWANIA */
     #login-screen {
       position: fixed; inset: 0; background: #000; z-index: 2000;
       display: flex; justify-content: center; align-items: center; padding: 20px;
@@ -84,7 +86,6 @@
     .btn-maroon:hover { transform: translateY(-2px); filter: brightness(1.15); }
     .btn-maroon:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
-    /* STYLIZACJA PRZYCISKÓW KIEROWCY */
     .btn-drive-start { 
       background: linear-gradient(135deg, #70151c 0%, #450c11 100%) !important; 
       color: var(--accent-cream) !important;
@@ -132,7 +133,6 @@
       margin-left: 6px;
     }
 
-    /* LAYOUT APLIKACJI */
     #main-layout { display: none; width: 100vw; height: 100dvh; position: relative; z-index: 2; }
 
     .toggle-sidebar-btn {
@@ -144,7 +144,6 @@
     }
     .toggle-sidebar-btn:hover { background: rgba(255, 255, 255, 0.25); }
 
-    /* SIDEBAR */
     .sidebar-menu {
       width: 260px; height: 100%;
       background: var(--glass-bg); backdrop-filter: blur(35px);
@@ -167,7 +166,6 @@
       box-shadow: 0 6px 18px rgba(92, 18, 24, 0.4);
     }
 
-    /* CONTENT AREA */
     .content-area {
       flex: 1; height: 100%; overflow-y: auto; padding: 60px 20px 20px 20px;
       display: flex; flex-direction: column; position: relative;
@@ -188,9 +186,7 @@
       100% { box-shadow: 0 0 0px rgba(138, 28, 36, 0); border-color: rgba(255, 255, 255, 0.08); }
     }
 
-    .start-glow-active {
-      animation: startGlowEffect 1.5s ease-in-out;
-    }
+    .start-glow-active { animation: startGlowEffect 1.5s ease-in-out; }
 
     .card-title-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 
@@ -226,14 +222,7 @@
     .day-box.selected { border-color: var(--accent-cream); background: rgba(138, 28, 36, 0.25); }
     .day-box.has-shift, .day-box.work { border-color: rgba(138, 28, 36, 0.6); background: rgba(92, 18, 24, 0.2); }
 
-    /* STRUKTURA DLA KURSU */
-    .kurs-layout-grid {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      gap: 10px;
-      min-height: 0;
-    }
+    .kurs-layout-grid { display: flex; flex-direction: column; flex: 1; gap: 10px; min-height: 0; }
 
     .stops-scroll {
       flex: 1; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08);
@@ -294,7 +283,6 @@
     .live-progress-bar { width: 100%; height: 5px; background: rgba(255, 255, 255, 0.1); border-radius: 3px; overflow: hidden; }
     .live-progress-fill { height: 100%; background: linear-gradient(90deg, #70151c, #f5e8d0); width: 0%; transition: width 0.4s ease; }
 
-    /* REGULACJE MOBILNE */
     body.is-mobile .sidebar-menu { position: absolute; left: 0; top: 0; bottom: 0; width: 240px; z-index: 1000; box-shadow: 10px 0 30px rgba(0,0,0,0.8); }
     body.is-mobile .sidebar-menu.hidden { margin-left: -250px; }
     body.is-mobile .content-area { padding: 55px 10px 10px 10px !important; }
@@ -306,22 +294,21 @@
     @media (orientation: landscape) and (max-height: 500px) {
       .content-area { padding: 8px 12px 8px 55px !important; }
       .toggle-sidebar-btn { top: 8px; left: 8px; width: 36px; height: 36px; font-size: 18px; }
+      
       .glass-card { padding: 10px !important; margin-bottom: 6px !important; }
       .card-title-bar { margin-bottom: 6px !important; }
       
-      .kurs-layout-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-      }
-      
+      .kurs-layout-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
       .stops-scroll { margin: 0; height: 100%; }
       .stop-row { padding: 6px 10px; margin-bottom: 4px; font-size: 11px; }
+      
       .btn-maroon { height: 34px !important; font-size: 11px !important; }
       .form-group { margin-bottom: 6px; }
       .input-pill { height: 34px; font-size: 12px; }
+      
       .calendar-grid { gap: 4px; margin-top: 5px; }
       .day-box { min-height: 35px; padding: 4px; font-size: 10px; }
+
       .brand-title { font-size: 20px; }
       .brand-sub { font-size: 11px; margin-bottom: 15px; }
       .login-container { padding: 18px; max-width: 380px; }
@@ -334,11 +321,11 @@
   <div id="login-screen">
     <div class="login-container">
       <div class="brand-title">MPK DROBIN</div>
-      <div class="brand-sub">ZINTEGROWANY SYSTEM TRANSPORTOWY</div>
+      <div class="brand-sub">ZINTEROWANY SYSTEM TRANSPORTOWY</div>
 
       <div class="form-group">
         <label>Użytkownik / Login</label>
-        <input type="text" id="l-user" class="input-pill" value="jankowalski" placeholder="bartek (Dyspozytor) lub jankowalski (Kierowca)">
+        <input type="text" id="l-user" class="input-pill" value="jankowalski" placeholder="bartek (Dyspozytor) lub jankowalski">
       </div>
 
       <div class="form-group">
@@ -354,8 +341,8 @@
         </select>
       </div>
 
-      <button class="btn-maroon" onclick="zalogujDoSystemu()">Zaloguj się do Systemu ➔</button>
-      <p id="login-err" style="color: #ff6b6b; font-size: 12px; margin-top: 8px; display: none;">Nieprawidłowy login lub hasło!</p>
+      <button class="btn-maroon" id="btn-login" onclick="zalogujDoSystemu()">Zaloguj się do Systemu ➔</button>
+      <p id="login-err" style="color: #ff6b6b; font-size: 12px; margin-top: 8px; display: none;"></p>
     </div>
   </div>
 
@@ -383,7 +370,7 @@
     <!-- CONTENT AREA -->
     <div class="content-area">
 
-      <!-- DYSPOZYTOR -->
+      <!-- ==================== WIDOKI DYSPOZYTORA ==================== -->
       <div id="view-disp-linie" class="view-section">
         <div class="card-title-bar">
           <h2>Lista Aktywnych Linii i Przystanków</h2>
@@ -534,7 +521,7 @@
         </div>
       </div>
 
-      <!-- KIEROWCA -->
+      <!-- ==================== WIDOKI KIEROWCY ==================== -->
       <div id="view-driver-home" class="view-section">
         <div style="font-size: 24px; font-weight: 700; margin-bottom: 2px;">Witaj, <span id="driver-display-name" style="color: var(--accent-cream);">-</span></div>
         <div style="font-size: 12px; color: var(--accent-cream-dim); margin-bottom: 15px;" id="driver-datetime">Dzisiaj jest: -</div>
@@ -733,97 +720,164 @@
   </div>
 
   <script>
+    /* =========================================================================
+       INICJALIZACJA SUPABASE
+       ========================================================================= */
+    const SUPABASE_URL = 'https://pqlvpnzysallzgmwswjy.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxbHZwbnp5c2FsbHpnbXdzd2p5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1NDkwMjYsImV4cCI6MjEwMjEyNTAyNn0.V17mvyVUa9nPbD7ne_20JACjyXdO0v4FR9PF6ahUItk';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    /* STANY APLIKACJI */
     let zalogowanaRola = null;
     let zalogowanyKierowcaObj = null;
     let clockInterval = null;
-    let isStopAnnouncementPlaying = false; 
+    let isStopAnnouncementPlaying = false;
 
-    // DOMYŚLNE DANE DLA APLIKACJI
-    let przystankiBaza = [
-      { id: 1, nazwa: "Północ (Pętla Startowa)", mowiona: "Północ" },
-      { id: 2, nazwa: "Rondo", mowiona: "Rondo" },
-      { id: 3, nazwa: "Szpital", mowiona: "Szpital" },
-      { id: 4, nazwa: "Południe (Pętla Końcowa)", mowiona: "Południe" }
-    ];
-
-    let linieBaza = [
-      {
-        id: 1,
-        numer: "Linia 161",
-        kierunek: "Północ ➔ Południe",
-        przystanki: [
-          { id: 1, nazwa: "Północ (Pętla Startowa)", mowiona: "Północ", czas: 12 },
-          { id: 2, nazwa: "Rondo", mowiona: "Rondo", czas: 15 },
-          { id: 3, nazwa: "Szpital", mowiona: "Szpital", czas: 15 },
-          { id: 4, nazwa: "Południe (Pętla Końcowa)", mowiona: "Południe", czas: 10 }
-        ]
-      }
-    ];
-
-    let kierowcyBaza = [
-      { 
-        id: 1, 
-        name: "Jan Kowalski", 
-        login: "jankowalski", 
-        pass: "kierowca123",
-        assignedLoops: 5,
-        completedLoops: 0,
-        missedLoops: 0,
-        punishmentLoops: 0,
-        isOnBreak: false,
-        lastStopTimestamp: 0,
-        currentStopIdx: 0,
-        currentLoop: 0,
-        activeLine: "Linia 161",
-        statusText: "Postój"
-      },
-      { 
-        id: 2, 
-        name: "Piotr Nowak", 
-        login: "pnowak", 
-        pass: "kierowca123",
-        assignedLoops: 5,
-        completedLoops: 0,
-        missedLoops: 0,
-        punishmentLoops: 0,
-        isOnBreak: false,
-        lastStopTimestamp: 0,
-        currentStopIdx: 0,
-        currentLoop: 0,
-        activeLine: "Linia 161",
-        statusText: "Postój"
-      }
-    ];
-
+    let przystankiBaza = [];
+    let linieBaza = [];
+    let kierowcyBaza = [];
     let grafikBaza = {}; 
-    let powiadomieniaBaza = {
-      1: [{ id: 1, nadawca: "Dyspozytornia", tresc: "Witaj w systemie MPK Drobin. Twoje konto jest aktywne.", czas: "06:00" }],
-      2: [{ id: 1, nadawca: "Dyspozytornia", tresc: "Witaj w systemie MPK Drobin. Twoje konto jest aktywne.", czas: "06:00" }]
-    }; 
+    let powiadomieniaBaza = {}; 
     let prosbyBaza = []; 
 
-    // MECHANIZM TRWAŁEGO ZAPISU I ODCZYTU Z LOCALSTORAGE (F5 PRESERVATION)
-    function saveState() {
-      localStorage.setItem('mpk_przystankiBaza', JSON.stringify(przystankiBaza));
-      localStorage.setItem('mpk_linieBaza', JSON.stringify(linieBaza));
-      localStorage.setItem('mpk_kierowcyBaza', JSON.stringify(kierowcyBaza));
-      localStorage.setItem('mpk_grafikBaza', JSON.stringify(grafikBaza));
-      localStorage.setItem('mpk_powiadomieniaBaza', JSON.stringify(powiadomieniaBaza));
-      localStorage.setItem('mpk_prosbyBaza', JSON.stringify(prosbyBaza));
+    /* KONFIGURACJA SYNCHRONIZACJI W CZASIE RZECZYWISTYM (REALTIME) */
+    function initRealtimeSubscriptions() {
+      supabase.channel('public-db-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, payload => {
+          syncProfilesFromDb();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, payload => {
+          if (zalogowanyKierowcaObj) syncNotifsFromDb(zalogowanyKierowcaObj.id);
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'requests' }, payload => {
+          if (zalogowanaRola === 'disp') syncRequestsFromDb();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'schedules' }, payload => {
+          syncSchedulesFromDb();
+        })
+        .subscribe();
     }
 
-    function loadState() {
-      if (localStorage.getItem('mpk_przystankiBaza')) przystankiBaza = JSON.parse(localStorage.getItem('mpk_przystankiBaza'));
-      if (localStorage.getItem('mpk_linieBaza')) linieBaza = JSON.parse(localStorage.getItem('mpk_linieBaza'));
-      if (localStorage.getItem('mpk_kierowcyBaza')) kierowcyBaza = JSON.parse(localStorage.getItem('mpk_kierowcyBaza'));
-      if (localStorage.getItem('mpk_grafikBaza')) grafikBaza = JSON.parse(localStorage.getItem('mpk_grafikBaza'));
-      if (localStorage.getItem('mpk_powiadomieniaBaza')) powiadomieniaBaza = JSON.parse(localStorage.getItem('mpk_powiadomieniaBaza'));
-      if (localStorage.getItem('mpk_prosbyBaza')) prosbyBaza = JSON.parse(localStorage.getItem('mpk_prosbyBaza'));
+    /* SYSTEM SYNCHRONIZACJI DANYCH Z BAZĄ SUPABASE */
+    async function syncStopsFromDb() {
+      const { data, error } = await supabase.from('stops').select('*').order('id', { ascending: true });
+      if (!error && data) {
+        przystankiBaza = data;
+        uaktualnijSelectPrzystankow();
+      }
     }
 
-    // Odczyt danych na starcie strony
-    loadState();
+    async function syncLinesFromDb() {
+      const { data, error } = await supabase.from('lines').select('*').order('id', { ascending: true });
+      if (!error && data) {
+        linieBaza = data;
+        if (zalogowanaRola === 'disp') renderGlowneLinie();
+        uaktualnijSelectyLinii();
+      }
+    }
 
+    async function syncProfilesFromDb() {
+      const { data, error } = await supabase.from('profiles').select('*');
+      if (!error && data) {
+        kierowcyBaza = data.map(k => ({
+          id: k.id,
+          name: k.name,
+          login: k.login,
+          assignedLoops: k.assigned_loops,
+          completedLoops: k.completed_loops,
+          missedLoops: k.missed_loops,
+          punishmentLoops: k.punishment_loops,
+          isOnBreak: k.is_on_break,
+          lastStopTimestamp: k.last_stop_timestamp,
+          currentStopIdx: k.current_stop_idx,
+          currentLoop: k.current_loop,
+          activeLine: k.active_line,
+          statusText: k.status_text,
+          role: k.role
+        }));
+
+        if (zalogowanyKierowcaObj) {
+          const freshMe = kierowcyBaza.find(x => x.id === zalogowanyKierowcaObj.id);
+          if (freshMe) {
+            zalogowanyKierowcaObj = freshMe;
+            odswiezDaneKierowcyHome();
+          }
+        }
+
+        if (zalogowanaRola === 'disp') {
+          renderKierowcy();
+        }
+      }
+    }
+
+    async function syncSchedulesFromDb() {
+      const { data, error } = await supabase.from('schedules').select('*');
+      if (!error && data) {
+        grafikBaza = {};
+        data.forEach(s => {
+          grafikBaza[`${s.driver_id}_${s.day_num}`] = {
+            linia: s.linia,
+            koleka: s.koleka,
+            przerwaPo: s.przerwa_po,
+            przerwaCzas: s.przerwa_czas
+          };
+        });
+        if (zalogowanaRola === 'disp') generujKalendarzGrafikaDyspozytora();
+        if (zalogowanaRola === 'driver') generujKalendarzKierowcy();
+      }
+    }
+
+    async function syncNotifsFromDb(driverId) {
+      if (!driverId) return;
+      const { data, error } = await supabase.from('notifications')
+        .select('*')
+        .eq('driver_id', driverId)
+        .order('id', { ascending: false });
+
+      if (!error && data) {
+        powiadomieniaBaza[driverId] = data.map(n => ({
+          id: n.id,
+          nadawca: n.nadawca,
+          tresc: n.tresc,
+          czas: n.czas
+        }));
+        if (zalogowanyKierowcaObj && zalogowanyKierowcaObj.id === driverId) {
+          renderDriverPowiadomienia();
+        }
+      }
+    }
+
+    async function syncRequestsFromDb() {
+      const { data, error } = await supabase.from('requests').select('*').order('id', { ascending: false });
+      if (!error && data) {
+        prosbyBaza = data.map(r => ({
+          id: r.id,
+          kierowcaId: r.driver_id,
+          kierowcaName: r.driver_name,
+          typ: r.typ,
+          powod: r.powod,
+          czas: r.czas
+        }));
+        if (zalogowanaRola === 'disp') renderDispProsby();
+      }
+    }
+
+    /* SYNCHRONIZACJA STANU KIEROWCY DO SUPABASE */
+    async function updateDriverProfileState(driverObj) {
+      if (!driverObj || !driverObj.id) return;
+      await supabase.from('profiles').update({
+        completed_loops: driverObj.completedLoops,
+        assigned_loops: driverObj.assignedLoops,
+        punishment_loops: driverObj.punishmentLoops,
+        is_on_break: driverObj.isOnBreak,
+        current_stop_idx: driverObj.currentStopIdx,
+        current_loop: driverObj.currentLoop,
+        status_text: driverObj.statusText,
+        last_stop_timestamp: driverObj.lastStopTimestamp
+      }).eq('id', driverObj.id);
+    }
+
+    /* SYNCHRONIZACJA SYNTEZATORA MOWY (TTS) */
     let availableVoices = [];
     function loadVoices() {
       if ('speechSynthesis' in window) {
@@ -835,25 +889,24 @@
       loadVoices();
     }
 
-    function czytajTekst(tekst, isStopAnnouncement = false) {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const msg = new SpeechSynthesisUtterance(tekst);
-        msg.lang = 'pl-PL';
-        
-        if (availableVoices.length > 0) {
-          const plVoice = availableVoices.find(v => v.lang.includes('pl'));
-          if (plVoice) msg.voice = plVoice;
-        }
+    function czytajTekst(tekst, isStopAnnounce = false) {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
 
-        if (isStopAnnouncement) {
-          isStopAnnouncementPlaying = true;
-          msg.onend = () => { isStopAnnouncementPlaying = false; };
-          msg.onerror = () => { isStopAnnouncementPlaying = false; };
-        }
+      const msg = new SpeechSynthesisUtterance(tekst);
+      msg.lang = 'pl-PL';
+      msg.rate = 0.95;
 
-        window.speechSynthesis.speak(msg);
+      const plVoice = availableVoices.find(v => v.lang.includes('pl'));
+      if (plVoice) msg.voice = plVoice;
+
+      if (isStopAnnounce) {
+        isStopAnnouncementPlaying = true;
+        msg.onend = () => { isStopAnnouncementPlaying = false; };
+        msg.onerror = () => { isStopAnnouncementPlaying = false; };
       }
+
+      window.speechSynthesis.speak(msg);
     }
 
     function startLiveClock() {
@@ -873,13 +926,17 @@
       clockInterval = setInterval(updateClock, 1000);
     }
 
-    function zalogujDoSystemu() {
+    /* AUTENTYKACJA Z SUPABASE (AUTH) */
+    async function zalogujDoSystemu() {
       const userVal = document.getElementById('l-user').value.trim();
       const passVal = document.getElementById('l-pass').value.trim();
       const deviceVal = document.getElementById('l-device').value;
       const errBox = document.getElementById('login-err');
+      const btnLogin = document.getElementById('btn-login');
 
       errBox.style.display = 'none';
+      btnLogin.disabled = true;
+      btnLogin.innerText = "Logowanie...";
 
       if (deviceVal === 'mobile') {
         document.body.classList.add('is-mobile');
@@ -887,42 +944,74 @@
         document.body.classList.remove('is-mobile');
       }
 
-      if (userVal.toLowerCase() === "bartek") {
-        if (passVal === "1234") {
-          zalogowanaRola = "disp";
-          zalogowanyKierowcaObj = null;
-          uruchomAplikacje();
-        } else {
-          errBox.innerText = "Nieprawidłowe hasło dyspozytora!";
-          errBox.style.display = 'block';
-        }
+      // 1. ZALOGUJ PRZEZ SUPABASE AUTH (EMAIL = LOGIN@mpk.pl)
+      const emailDomain = userVal.includes('@') ? userVal : `${userVal.toLowerCase()}@mpk.pl`;
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: emailDomain,
+        password: passVal
+      });
+
+      if (error) {
+        btnLogin.disabled = false;
+        btnLogin.innerText = "Zaloguj się do Systemu ➔";
+        errBox.innerText = "Błąd logowania: " + error.message;
+        errBox.style.display = 'block';
         return;
       }
 
-      const kFound = kierowcyBaza.find(k => 
-        k.login.toLowerCase() === userVal.toLowerCase() || 
-        k.name.toLowerCase() === userVal.toLowerCase()
-      );
+      // 2. POBIERZ PROFIL ZALOGOWANEGO UŻYTKOWNIKA Z TABELI PROFILES
+      const user = data.user;
+      const { data: profile, error: profError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
 
-      if (kFound) {
-        if (kFound.pass === passVal) {
-          zalogowanaRola = "driver";
-          zalogowanyKierowcaObj = kFound;
-          uruchomAplikacje();
-        } else {
-          errBox.innerText = "Nieprawidłowe hasło dla tego kierowcy!";
-          errBox.style.display = 'block';
-        }
-      } else {
-        errBox.innerText = "Nie znaleziono użytkownika o takim loginie!";
+      btnLogin.disabled = false;
+      btnLogin.innerText = "Zaloguj się do Systemu ➔";
+
+      if (profError || !profile) {
+        errBox.innerText = "Nie znaleziono profilu użytkownika w bazie!";
         errBox.style.display = 'block';
+        return;
       }
+
+      if (profile.role === 'disp') {
+        zalogowanaRola = "disp";
+        zalogowanyKierowcaObj = null;
+      } else {
+        zalogowanaRola = "driver";
+        zalogowanyKierowcaObj = {
+          id: profile.id,
+          name: profile.name,
+          login: profile.login,
+          assignedLoops: profile.assigned_loops,
+          completedLoops: profile.completed_loops,
+          missedLoops: profile.missed_loops,
+          punishmentLoops: profile.punishment_loops,
+          isOnBreak: profile.is_on_break,
+          lastStopTimestamp: profile.last_stop_timestamp,
+          currentStopIdx: profile.current_stop_idx,
+          currentLoop: profile.current_loop,
+          activeLine: profile.active_line,
+          statusText: profile.status_text
+        };
+      }
+
+      uruchomAplikacje();
     }
 
-    function uruchomAplikacje() {
+    async function uruchomAplikacje() {
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('main-layout').style.display = 'flex';
-      
+
+      // ŁADOWANIE WSZYSTKICH BAZ Z SUPABASE
+      await syncStopsFromDb();
+      await syncLinesFromDb();
+      await syncProfilesFromDb();
+      await syncSchedulesFromDb();
+      initRealtimeSubscriptions();
+
       const navBox = document.getElementById('sidebar-nav-container');
       const roleTitle = document.getElementById('sidebar-role-title');
       const userLbl = document.getElementById('logged-user-label');
@@ -931,7 +1020,7 @@
 
       if (zalogowanaRola === 'disp') {
         roleTitle.innerText = "👨‍💻 DYSPOZYTORNIA";
-        userLbl.innerText = "Bartek (Dyspozytor)";
+        userLbl.innerText = "Dyspozytor Systemu";
         
         navBox.innerHTML = `
           <div id="nav-disp-linie" class="nav-item" onclick="pokazWidok('disp-linie')"><span>🚏</span> Kreator Linii</div>
@@ -944,7 +1033,7 @@
         renderGlowneLinie();
         renderKierowcy();
         generujKalendarzGrafikaDyspozytora();
-        renderDispProsby();
+        await syncRequestsFromDb();
         pokazWidok('disp-linie');
       } else {
         roleTitle.innerText = "🚌 PANEL KIEROWCY";
@@ -962,12 +1051,13 @@
         startLiveClock();
         generujKalendarzKierowcy();
         renderStopsKierowcy();
-        renderDriverPowiadomienia();
+        await syncNotifsFromDb(zalogowanyKierowcaObj.id);
         pokazWidok('driver-home');
       }
     }
 
-    function wyloguj() {
+    async function wyloguj() {
+      await supabase.auth.signOut();
       document.getElementById('main-layout').style.display = 'none';
       document.getElementById('login-screen').style.display = 'flex';
       clearInterval(timerInterval);
@@ -995,7 +1085,7 @@
       }
     }
 
-    /* DYSPOZYTOR LOGIKA */
+    /* DYSPOZYTOR - AKCJE PRZYSTANKI & LINIE */
     function otworzBazePrzystankow() {
       document.getElementById('modal-baza-p').style.display = 'flex';
       renderListaBazyPrzystankow();
@@ -1004,37 +1094,41 @@
     function renderListaBazyPrzystankow() {
       const box = document.getElementById('baza-przystankow-lista');
       box.innerHTML = "";
-      przystankiBaza.forEach((p, idx) => {
+      przystankiBaza.forEach(p => {
         box.innerHTML += `
           <div class="list-item">
             <div>
               <strong>${p.nazwa}</strong>
               <div style="font-size: 11px; color: var(--text-dim);">Głosowo: "${p.mowiona}"</div>
             </div>
-            <button style="background: none; border: none; color: var(--accent-cream); cursor: pointer;" onclick="usunPrzystanekZBazyGlobalnej(${idx})">🗑️ Usuń</button>
+            <button style="background: none; border: none; color: var(--accent-cream); cursor: pointer;" onclick="usunPrzystanekZBazyGlobalnej(${p.id})">🗑️ Usuń</button>
           </div>
         `;
       });
     }
 
-    function dodajPrzystanekDoBazyGlobalnie() {
+    async function dodajPrzystanekDoBazyGlobalnie() {
       const nazwa = document.getElementById('bp-nazwa').value.trim();
       const mowiona = document.getElementById('bp-mowiona').value.trim();
       if (!nazwa) return alert("Podaj nazwę przystanku!");
 
-      przystankiBaza.push({ id: Date.now(), nazwa, mowiona: mowiona || nazwa });
+      const { data, error } = await supabase.from('stops').insert([
+        { nazwa, mowiona: mowiona || nazwa }
+      ]).select();
+
+      if (error) return alert("Błąd zapisu w Supabase: " + error.message);
+
       document.getElementById('bp-nazwa').value = "";
       document.getElementById('bp-mowiona').value = "";
-      saveState();
+      await syncStopsFromDb();
       renderListaBazyPrzystankow();
-      uaktualnijSelectPrzystankow();
     }
 
-    function usunPrzystanekZBazyGlobalnej(idx) {
-      przystankiBaza.splice(idx, 1);
-      saveState();
+    async function usunPrzystanekZBazyGlobalnej(id) {
+      const { error } = await supabase.from('stops').delete().eq('id', id);
+      if (error) return alert("Błąd usuwania z Supabase: " + error.message);
+      await syncStopsFromDb();
       renderListaBazyPrzystankow();
-      uaktualnijSelectPrzystankow();
     }
 
     function uaktualnijSelectPrzystankow() {
@@ -1049,6 +1143,7 @@
       if(!box) return;
       box.innerHTML = "";
       linieBaza.forEach(l => {
+        const przystankiArr = Array.isArray(l.przystanki) ? l.przystanki : [];
         box.innerHTML += `
           <div class="glass-card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -1056,9 +1151,9 @@
               <button class="btn-maroon" style="width: auto; padding: 4px 10px; font-size: 11px;" onclick="otworzEdytorLinii(${l.id})">✏️ Edytuj</button>
             </div>
             <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 8px;">Kierunek: <strong>${l.kierunek}</strong></div>
-            <div style="font-size: 11px; font-weight: 700; color: #ccc; margin-bottom: 4px;">Przystanki (${l.przystanki.length}):</div>
+            <div style="font-size: 11px; font-weight: 700; color: #ccc; margin-bottom: 4px;">Przystanki (${przystankiArr.length}):</div>
             <div style="display: flex; flex-direction: column; gap: 4px;">
-              ${l.przystanki.map((p, i) => `<div style="font-size: 11px; background: rgba(255,255,255,0.04); padding: 4px 8px; border-radius: 6px;">${i+1}. ${p.nazwa} - ${p.czas}s</div>`).join('')}
+              ${przystankiArr.map((p, i) => `<div style="font-size: 11px; background: rgba(255,255,255,0.04); padding: 4px 8px; border-radius: 6px;">${i+1}. ${p.nazwa} - ${p.czas}s</div>`).join('')}
             </div>
           </div>
         `;
@@ -1078,7 +1173,7 @@
         document.getElementById('modal-title').innerText = `Edycja: ${l.numer}`;
         document.getElementById('m-l-numer').value = l.numer;
         document.getElementById('m-l-kierunek').value = l.kierunek;
-        tymczasowePrzystankiLinii = JSON.parse(JSON.stringify(l.przystanki));
+        tymczasowePrzystankiLinii = JSON.parse(JSON.stringify(l.przystanki || []));
       } else {
         document.getElementById('modal-title').innerText = `Tworzenie Nowej Linii`;
         document.getElementById('m-l-numer').value = "";
@@ -1123,24 +1218,27 @@
       renderPrzystankiWEdytorze();
     }
 
-    function zapiszEdycjeLinii() {
+    async function zapiszEdycjeLinii() {
       const numer = document.getElementById('m-l-numer').value.trim();
       const kierunek = document.getElementById('m-l-kierunek').value.trim();
       if (!numer) return alert("Podaj numer linii!");
 
       if (edytowanaLiniaId) {
-        const l = linieBaza.find(x => x.id === edytowanaLiniaId);
-        l.numer = numer;
-        l.kierunek = kierunek;
-        l.przystanki = tymczasowePrzystankiLinii;
+        const { error } = await supabase.from('lines').update({
+          numer,
+          kierunek,
+          przystanki: tymczasowePrzystankiLinii
+        }).eq('id', edytowanaLiniaId);
+        if (error) return alert("Błąd edycji linii: " + error.message);
       } else {
-        linieBaza.push({ id: Date.now(), numer, kierunek, przystanki: tymczasowePrzystankiLinii });
+        const { error } = await supabase.from('lines').insert([
+          { numer, kierunek, przystanki: tymczasowePrzystankiLinii }
+        ]);
+        if (error) return alert("Błąd tworzenia linii: " + error.message);
       }
 
-      saveState();
       zamknijModal('modal-linia');
-      renderGlowneLinie();
-      uaktualnijSelectyLinii();
+      await syncLinesFromDb();
     }
 
     function zamknijModal(id) { document.getElementById(id).style.display = 'none'; }
@@ -1153,63 +1251,69 @@
       }
     }
 
-    function dodajKierowce() {
+    /* AKCJE ZARZĄDZANIA KIEROWCAMI Z SUPABASE AUTH */
+    async function dodajKierowce() {
       const name = document.getElementById('k-name').value.trim();
       const login = document.getElementById('k-login').value.trim();
       const pass = document.getElementById('k-pass').value.trim();
 
       if (!name) return alert("Wpisz imię i nazwisko!");
+      const cleanLogin = login || name.toLowerCase().replace(/\s+/g, "");
+      const email = `${cleanLogin}@mpk.pl`;
 
-      const newK = { 
-        id: Date.now(), 
-        name, 
-        login: login || name.toLowerCase().replace(/\s+/g, ""), 
-        pass: pass || "kierowca123",
-        assignedLoops: 5,
-        completedLoops: 0,
-        missedLoops: 0,
-        punishmentLoops: 0,
-        isOnBreak: false,
-        lastStopTimestamp: 0,
-        currentStopIdx: 0,
-        currentLoop: 0,
-        activeLine: "Linia 161",
-        statusText: "Postój"
-      };
+      // 1. TWORZENIE UŻYTKOWNIKA W SUPABASE AUTH
+      const { data: authData, error: authErr } = await supabase.auth.signUp({
+        email: email,
+        password: pass || "kierowca123"
+      });
 
-      kierowcyBaza.push(newK);
-      powiadomieniaBaza[newK.id] = [];
-      saveState();
+      if (authErr) return alert("Błąd tworzenia konta w Supabase Auth: " + authErr.message);
+
+      // 2. DOWIĄZANIE PROFILU W TABELI PROFILES
+      const newUserId = authData.user.id;
+      const { error: profErr } = await supabase.from('profiles').insert([
+        {
+          id: newUserId,
+          role: 'driver',
+          name: name,
+          login: cleanLogin,
+          assigned_loops: 5,
+          completed_loops: 0,
+          missed_loops: 0,
+          punishment_loops: 0,
+          is_on_break: false,
+          last_stop_timestamp: 0,
+          current_stop_idx: 0,
+          current_loop: 0,
+          active_line: "Linia 161",
+          status_text: "Postój"
+        }
+      ]);
+
+      if (profErr) return alert("Błąd profilu w bazie: " + profErr.message);
 
       document.getElementById('k-name').value = "";
       document.getElementById('k-login').value = "";
       document.getElementById('k-pass').value = "kierowca123";
-      renderKierowcy();
+
+      alert(`Konto kierowcy ${name} zostało pomyślnie dodane w Supabase!`);
+      await syncProfilesFromDb();
     }
 
-    function usunKierowce(id) {
-      if (confirm("Czy na pewno chcesz usunąć tego kierowcę?")) {
-        kierowcyBaza = kierowcyBaza.filter(k => k.id !== id);
-        delete powiadomieniaBaza[id];
-        saveState();
-        renderKierowcy();
+    async function usunKierowce(id) {
+      if (confirm("Czy na pewno chcesz usunąć tego kierowcę z bazy?")) {
+        const { error } = await supabase.from('profiles').delete().eq('id', id);
+        if (error) return alert("Błąd usuwania z bazy: " + error.message);
+        await syncProfilesFromDb();
       }
     }
 
-    function zmienHasloKierowcy(id) {
-      const k = kierowcyBaza.find(x => x.id === id);
-      if (!k) return;
-      const newPass = prompt(`Wpisz nowe hasło dla kierowcy ${k.name}:`, k.pass);
-      if (newPass !== null && newPass.trim() !== "") {
-        k.pass = newPass.trim();
-        saveState();
-        alert(`Hasło dla ${k.name} zostało zmienione na: ${k.pass}`);
-        renderKierowcy();
-      }
+    async function zmienHasloKierowcy(id) {
+      alert("Zmiana hasła wymaga ponownego zalogowania lub użycia Supabase Admin API.");
     }
 
-    function addPunishmentDriver() {
-      const kId = parseInt(document.getElementById('disp-action-kierowca-kursy').value);
+    async function addPunishmentDriver() {
+      const kId = document.getElementById('disp-action-kierowca-kursy').value;
       const extra = parseInt(document.getElementById('disp-extra-loops').value) || 0;
       const k = kierowcyBaza.find(x => x.id === kId);
 
@@ -1218,54 +1322,58 @@
       k.punishmentLoops += extra;
       k.assignedLoops += extra;
 
-      if (!powiadomieniaBaza[k.id]) powiadomieniaBaza[k.id] = [];
-      powiadomieniaBaza[k.id].unshift({
-        id: Date.now(),
-        nadawca: "Dyspozytor (KARA ZA KURS)",
-        tresc: `⚠️ DOLICZONO KARĘ: +${extra} dodatkowe kółka za opóźnienie / pominięcie kursu!`,
-        czas: new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
-      });
+      await updateDriverProfileState(k);
 
-      saveState();
+      const now = new Date();
+      await supabase.from('notifications').insert([
+        {
+          driver_id: k.id,
+          nadawca: "Dyspozytor (KARA ZA KURS)",
+          tresc: `⚠️ DOLICZONO KARĘ: +${extra} dodatkowe kółka za opóźnienie / pominięcie kursu!`,
+          czas: now.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+        }
+      ]);
+
       alert(`Nałożono karę dla ${k.name}: +${extra} doliczonych kółek.`);
-      renderKierowcy();
-      if(zalogowanyKierowcaObj && zalogowanyKierowcaObj.id === k.id) {
-        odswiezDaneKierowcyHome();
-      }
+      await syncProfilesFromDb();
     }
 
-    function setDriverBreak(minutes) {
-      const kId = parseInt(document.getElementById('disp-action-kierowca-przerwy').value);
+    async function setDriverBreak(minutes) {
+      const kId = document.getElementById('disp-action-kierowca-przerwy').value;
       const k = kierowcyBaza.find(x => x.id === kId);
 
       if (!k) return alert("Wybierz kierowcę!");
 
       k.isOnBreak = true;
       k.statusText = "Przerwa";
-      if (!powiadomieniaBaza[k.id]) powiadomieniaBaza[k.id] = [];
-      powiadomieniaBaza[k.id].unshift({
-        id: Date.now(),
-        nadawca: "Dyspozytor (PRZERWA)",
-        tresc: `Nałożono przerwę dyspozytorską na okres ${minutes} minut. Kurs zablokowany.`,
-        czas: new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
-      });
+      await updateDriverProfileState(k);
 
-      saveState();
+      const now = new Date();
+      await supabase.from('notifications').insert([
+        {
+          driver_id: k.id,
+          nadawca: "Dyspozytor (PRZERWA)",
+          tresc: `Nałożono przerwę dyspozytorską na okres ${minutes} minut. Kurs zablokowany.`,
+          czas: now.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+        }
+      ]);
+
       alert(`Zarezerwowano przerwę ${minutes} minut dla kierowcy ${k.name}.`);
-      renderKierowcy();
+      await syncProfilesFromDb();
 
-      setTimeout(() => {
+      setTimeout(async () => {
         k.isOnBreak = false;
         k.statusText = "Gotowy";
-        powiadomieniaBaza[k.id].unshift({
-          id: Date.now(),
-          nadawca: "Dyspozytor",
-          tresc: "Twoja przerwa została zakończona. Możesz kontynuować kurs.",
-          czas: new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
-        });
-        saveState();
-        renderKierowcy();
-      }, minutes * 1000 * 6);
+        await updateDriverProfileState(k);
+        await supabase.from('notifications').insert([
+          {
+            driver_id: k.id,
+            nadawca: "Dyspozytor",
+            tresc: "Twoja przerwa została zakończona. Możesz kontynuować kurs.",
+            czas: new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+          }
+        ]);
+      }, minutes * 1000 * 60);
     }
 
     function renderKierowcy() {
@@ -1281,10 +1389,12 @@
       if (selectAKursy) selectAKursy.innerHTML = "";
       if (selectAPrzerwy) selectAPrzerwy.innerHTML = "";
 
-      kierowcyBaza.forEach(k => {
+      const tylkoKierowcy = kierowcyBaza.filter(k => k.role !== 'disp');
+
+      tylkoKierowcy.forEach(k => {
         if (box) {
           const lObj = linieBaza.find(x => x.numer === k.activeLine) || linieBaza[0];
-          const trasa = lObj ? lObj.przystanki : [];
+          const trasa = lObj && Array.isArray(lObj.przystanki) ? lObj.przystanki : [];
           const currentStopName = trasa[k.currentStopIdx] ? trasa[k.currentStopIdx].nazwa : "Wyjazd na linię / Zajezdnia";
           const progress = trasa.length > 0 ? Math.round((k.currentStopIdx / trasa.length) * 100) : 0;
           
@@ -1320,8 +1430,7 @@
               <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
                 <span style="font-size: 10px; color: var(--text-dim);">Kółka: ${k.completedLoops}/${k.assignedLoops}</span>
                 <div>
-                  <button style="background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 2px 6px; border-radius: 4px; cursor: pointer; font-size: 10px;" onclick="zmienHasloKierowcy(${k.id})">🔑 Hasło</button>
-                  <button style="background: none; border: none; color: var(--accent-cream); cursor: pointer; font-size: 10px;" onclick="usunKierowce(${k.id})">🗑️ Usun</button>
+                  <button style="background: none; border: none; color: var(--accent-cream); cursor: pointer; font-size: 10px;" onclick="usunKierowce('${k.id}')">🗑️ Usuń</button>
                 </div>
               </div>
             </div>
@@ -1379,7 +1488,7 @@
       generujKalendarzGrafikaDyspozytora();
     }
 
-    function zapiszSluzbeDoGrafika() {
+    async function zapiszSluzbeDoGrafika() {
       if (!wybranyDzienDyspozytor) return alert("Wybierz dzień z kalendarza!");
       const selectG = document.getElementById('select-grafik-kierowca');
       const kId = selectG ? selectG.value : null;
@@ -1390,23 +1499,32 @@
       const przerwaPo = parseInt(document.getElementById('g-przerwa-po-kolku').value) || 2;
       const przerwaCzas = parseInt(document.getElementById('g-przerwa-czas').value) || 15;
 
-      grafikBaza[`${kId}_${wybranyDzienDyspozytor}`] = { linia, koleka, przerwaPo, przerwaCzas };
-
-      if (!powiadomieniaBaza[kId]) powiadomieniaBaza[kId] = [];
-      const now = new Date();
-      powiadomieniaBaza[kId].unshift({
-        id: Date.now(),
-        nadawca: "Dyspozytornia (Grafik)",
-        tresc: `Przypisano służbę na dzień ${wybranyDzienDyspozytor} Sierpnia: ${linia}, Kółek: ${koleka}. Przerwa (${przerwaCzas} min) zaplanowana po ${przerwaPo} kółku.`,
-        czas: now.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+      const { error } = await supabase.from('schedules').upsert({
+        driver_id: kId,
+        day_num: wybranyDzienDyspozytor,
+        linia,
+        koleka,
+        przerwa_po: przerwaPo,
+        przerwa_czas: przerwaCzas
       });
 
-      saveState();
-      alert(`✅ Przypisano służbę i przerwę!\nPowiadomienie trafiło do kierowcy.`);
-      generujKalendarzGrafikaDyspozytora();
+      if (error) return alert("Błąd zapisu grafika w Supabase: " + error.message);
+
+      const now = new Date();
+      await supabase.from('notifications').insert([
+        {
+          driver_id: kId,
+          nadawca: "Dyspozytornia (Grafik)",
+          tresc: `Przypisano służbę na dzień ${wybranyDzienDyspozytor} Sierpnia: ${linia}, Kółek: ${koleka}. Przerwa (${przerwaCzas} min) po ${przerwaPo} kółku.`,
+          czas: now.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+        }
+      ]);
+
+      alert(`✅ Przypisano służbę do bazy!\nPowiadomienie trafiło do kierowcy.`);
+      await syncSchedulesFromDb();
     }
 
-    function wyslijWiadomoscOdDyspozytora() {
+    async function wyslijWiadomoscOdDyspozytora() {
       const kId = document.getElementById('msg-kierowca').value;
       const tytul = document.getElementById('msg-tytul').value.trim();
       const tresc = document.getElementById('msg-tresc').value.trim();
@@ -1414,27 +1532,26 @@
       if (!kId) return alert("Wybierz odbiorcę!");
       if (!tresc) return alert("Wpisz treść wiadomości!");
 
-      if (!powiadomieniaBaza[kId]) powiadomieniaBaza[kId] = [];
       const now = new Date();
-      powiadomieniaBaza[kId].unshift({
-        id: Date.now(),
-        nadawca: `Dyspozytor (${tytul})`,
-        tresc: tresc,
-        czas: now.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
-      });
+      const { error } = await supabase.from('notifications').insert([
+        {
+          driver_id: kId,
+          nadawca: `Dyspozytor (${tytul})`,
+          tresc: tresc,
+          czas: now.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+        }
+      ]);
 
-      saveState();
-      alert("📩 Powiadomienie wysłane do kierowcy!");
+      if (error) return alert("Błąd wysyłania powiadomienia: " + error.message);
+
+      alert("📩 Powiadomienie zapisane i wysłane do kierowcy!");
       document.getElementById('msg-tresc').value = "";
     }
 
-    function removeDriverNotification(kierowcaId, notifId) {
-      if (powiadomieniaBaza[kierowcaId]) {
-        powiadomieniaBaza[kierowcaId] = powiadomieniaBaza[kierowcaId].filter(n => n.id !== notifId);
-        saveState();
-        if (zalogowanyKierowcaObj && zalogowanyKierowcaObj.id === kierowcaId) {
-          renderDriverPowiadomienia();
-        }
+    async function removeDriverNotification(kierowcaId, notifId) {
+      const { error } = await supabase.from('notifications').delete().eq('id', notifId);
+      if (!error) {
+        await syncNotifsFromDb(kierowcaId);
       }
     }
 
@@ -1448,7 +1565,7 @@
         return;
       }
 
-      prosbyBaza.forEach((p, index) => {
+      prosbyBaza.forEach(p => {
         box.innerHTML += `
           <div class="list-item" style="flex-direction: column; align-items: flex-start; gap: 6px;">
             <div style="display: flex; justify-content: space-between; width: 100%;">
@@ -1457,31 +1574,29 @@
             </div>
             <p style="font-size: 12px; color: #ccc;">"${p.powod}"</p>
             <div style="display: flex; gap: 6px; width: 100%; margin-top: 4px;">
-              <button class="btn-maroon" style="height: 28px; font-size: 10px;" onclick="odpowiedzNaProsbe(${index}, true)">Akceptuj ✓</button>
-              <button class="btn-maroon" style="height: 28px; font-size: 10px; background: #333;" onclick="odpowiedzNaProsbe(${index}, false)">Odrzuć ✕</button>
+              <button class="btn-maroon" style="height: 28px; font-size: 10px;" onclick="odpowiedzNaProsbe(${p.id}, '${p.kierowcaId}', '${p.typ}', true)">Akceptuj ✓</button>
+              <button class="btn-maroon" style="height: 28px; font-size: 10px; background: #333;" onclick="odpowiedzNaProsbe(${p.id}, '${p.kierowcaId}', '${p.typ}', false)">Odrzuć ✕</button>
             </div>
           </div>
         `;
       });
     }
 
-    function odpowiedzNaProsbe(index, czyZaakceptowano) {
-      const p = prosbyBaza[index];
-      const kId = p.kierowcaId;
+    async function odpowiedzNaProsbe(reqId, kId, typ, czyZaakceptowano) {
       const statusStr = czyZaakceptowano ? "ZAAKCEPTOWANA" : "ODRZUCONA";
-
-      if (!powiadomieniaBaza[kId]) powiadomieniaBaza[kId] = [];
       const now = new Date();
-      powiadomieniaBaza[kId].unshift({
-        id: Date.now(),
-        nadawca: "Dyspozytor",
-        tresc: `Twoja prośba (${p.typ}) została ${statusStr}.`,
-        czas: new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
-      });
 
-      prosbyBaza.splice(index, 1);
-      saveState();
-      renderDispProsby();
+      await supabase.from('notifications').insert([
+        {
+          driver_id: kId,
+          nadawca: "Dyspozytor",
+          tresc: `Twoja prośba (${typ}) została ${statusStr}.`,
+          czas: now.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+        }
+      ]);
+
+      await supabase.from('requests').delete().eq('id', reqId);
+      await syncRequestsFromDb();
       alert(`Wysłano odpowiedź do kierowcy: Prośba ${statusStr}.`);
     }
 
@@ -1501,6 +1616,7 @@
     let pausedPhase = 'driving';
 
     function odswiezDaneKierowcyHome() {
+      if (!zalogowanyKierowcaObj) return;
       document.getElementById('driver-display-name').innerText = zalogowanyKierowcaObj.name;
 
       const now = new Date();
@@ -1537,7 +1653,7 @@
       const lObj = pobierzAktualnaLinieKierowcy();
       if (!lObj) return [];
 
-      let list = [...lObj.przystanki];
+      let list = [...(lObj.przystanki || [])];
       if (currentLoopCount % 2 !== 0) {
         list.reverse();
       }
@@ -1614,7 +1730,7 @@
       czytajTekst("Wyjazd na linię. Prosimy nie wsiadać.");
     }
 
-    function startJazdaKierowca() {
+    async function startJazdaKierowca() {
       if (zalogowanyKierowcaObj.isOnBreak) {
         alert("Wstrzymano: Jesteś na przerwie ustalonej przez dyspozytora!");
         return;
@@ -1646,8 +1762,6 @@
       card.classList.add('start-glow-active');
 
       zalogowanyKierowcaObj.statusText = "W trakcie kursu";
-      saveState();
-
       document.getElementById('driver-status-text').innerText = "W trakcie kursu";
       document.getElementById('driver-status-text').style.color = "var(--accent-cream)";
       document.getElementById('loop-overlay').style.display = 'none';
@@ -1674,7 +1788,8 @@
 
       currentStopIndex = 0;
       zalogowanyKierowcaObj.currentStopIdx = 0;
-      saveState();
+      await updateDriverProfileState(zalogowanyKierowcaObj);
+
       renderStopsKierowcy();
 
       const lObj = pobierzAktualnaLinieKierowcy();
@@ -1742,7 +1857,7 @@
       boardingTimeRemaining = (customStartSec !== undefined) ? customStartSec : 15;
       updateTimerDisplay(boardingTimeRemaining);
 
-      boardingInterval = setInterval(() => {
+      boardingInterval = setInterval(async () => {
         boardingTimeRemaining--;
         updateTimerDisplay(boardingTimeRemaining);
 
@@ -1755,7 +1870,8 @@
           if (currentStopIndex < trasa.length - 1) {
             currentStopIndex++;
             zalogowanyKierowcaObj.currentStopIdx = currentStopIndex;
-            saveState();
+            await updateDriverProfileState(zalogowanyKierowcaObj);
+
             renderStopsKierowcy();
 
             const nxtStop = trasa[currentStopIndex];
@@ -1777,7 +1893,7 @@
       document.getElementById('timer').innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     }
 
-    function registerNextStop() {
+    async function registerNextStop() {
       if (zalogowanyKierowcaObj.isOnBreak) {
         alert("Masz obecnie przerwę dyspozytorską! Kurs jest zablokowany.");
         return;
@@ -1800,7 +1916,8 @@
       }
 
       zalogowanyKierowcaObj.lastStopTimestamp = now;
-      saveState();
+      await updateDriverProfileState(zalogowanyKierowcaObj);
+
       btnNext.disabled = true;
 
       let leftSec = 10;
@@ -1823,13 +1940,14 @@
       nastPrzystanek();
     }
 
-    function nastPrzystanek() {
+    async function nastPrzystanek() {
       const trasa = getAktualnaTrasaKierowcy();
 
       if (currentStopIndex < trasa.length - 1) {
         currentStopIndex++;
         zalogowanyKierowcaObj.currentStopIdx = currentStopIndex;
-        saveState();
+        await updateDriverProfileState(zalogowanyKierowcaObj);
+
         renderStopsKierowcy();
 
         const nxtStop = trasa[currentStopIndex];
@@ -1845,13 +1963,14 @@
 
         currentStopIndex++;
         zalogowanyKierowcaObj.currentStopIdx = currentStopIndex;
-        saveState();
+        await updateDriverProfileState(zalogowanyKierowcaObj);
+
         renderStopsKierowcy();
         pokazKoniecKolka();
       }
     }
 
-    function toggleZatrzymajWznowKurs() {
+    async function toggleZatrzymajWznowKurs() {
       const btnStop = document.getElementById('btn-stop-drive');
       const statusBanner = document.getElementById('course-status-banner');
 
@@ -1862,7 +1981,7 @@
         isStandActive = false;
 
         zalogowanyKierowcaObj.statusText = "Zatrzymany";
-        saveState();
+        await updateDriverProfileState(zalogowanyKierowcaObj);
 
         document.getElementById('driver-status-text').innerText = "Zatrzymany";
         document.getElementById('driver-status-text').style.color = "var(--accent-cream-dim)";
@@ -1879,7 +1998,7 @@
         isDrivePaused = false;
 
         zalogowanyKierowcaObj.statusText = "W trakcie kursu";
-        saveState();
+        await updateDriverProfileState(zalogowanyKierowcaObj);
 
         document.getElementById('driver-status-text').innerText = "W trakcie kursu";
         document.getElementById('driver-status-text').style.color = "var(--accent-cream)";
@@ -1902,7 +2021,7 @@
       }
     }
 
-    function togglePostojKurs() {
+    async function togglePostojKurs() {
       const btnStand = document.getElementById('btn-stand-drive');
       const btnStop = document.getElementById('btn-stop-drive');
       const statusBanner = document.getElementById('course-status-banner');
@@ -1919,7 +2038,7 @@
         }
 
         zalogowanyKierowcaObj.statusText = "Postój";
-        saveState();
+        await updateDriverProfileState(zalogowanyKierowcaObj);
 
         document.getElementById('driver-status-text').innerText = "Postój";
         document.getElementById('driver-status-text').style.color = "#d8e6be";
@@ -1936,7 +2055,7 @@
         isStandActive = false;
 
         zalogowanyKierowcaObj.statusText = "W trakcie kursu";
-        saveState();
+        await updateDriverProfileState(zalogowanyKierowcaObj);
 
         document.getElementById('driver-status-text').innerText = "W trakcie kursu";
         document.getElementById('driver-status-text').style.color = "var(--accent-cream)";
@@ -1984,10 +2103,11 @@
       }
     }
 
-    function pokazKoniecKolka() {
+    async function pokazKoniecKolka() {
       currentLoopCount++;
       zalogowanyKierowcaObj.completedLoops = currentLoopCount;
-      saveState();
+      zalogowanyKierowcaObj.currentLoop = currentLoopCount;
+      await updateDriverProfileState(zalogowanyKierowcaObj);
 
       document.getElementById('driver-completed-loops-val').innerText = currentLoopCount;
 
@@ -2008,15 +2128,16 @@
         desc.innerText = `Rozpoczynasz przerwę (${sluzba.przerwaCzas} min).`;
         btn.innerText = "KOŃCZĘ PRZERWĘ ▶";
         btn.style.display = "inline-flex";
+
         zalogowanyKierowcaObj.isOnBreak = true;
         zalogowanyKierowcaObj.statusText = "Przerwa";
-        saveState();
+        await updateDriverProfileState(zalogowanyKierowcaObj);
 
-        setTimeout(() => {
+        setTimeout(async () => {
           zalogowanyKierowcaObj.isOnBreak = false;
           zalogowanyKierowcaObj.statusText = "Gotowy";
-          saveState();
-        }, sluzba.przerwaCzas * 1000 * 6);
+          await updateDriverProfileState(zalogowanyKierowcaObj);
+        }, sluzba.przerwaCzas * 1000 * 60);
 
         czytajTekst(`Koniec kółka. Czas na przerwę ${sluzba.przerwaCzas} minut.`, true);
         return;
@@ -2027,8 +2148,10 @@
         desc.innerText = `Następny kurs rozpocznie się w odwrotnym kierunku.`;
         btn.innerText = "Zacznij kolejny kurs ▶";
         btn.style.display = "inline-flex";
+
         zalogowanyKierowcaObj.statusText = "Postój";
-        saveState();
+        await updateDriverProfileState(zalogowanyKierowcaObj);
+
         czytajTekst(`Koniec kursu. Ukończono ${currentLoopCount} z ${maxKoolka} kółek.`, true);
       } else {
         isZjazdDoZajezdni = true;
@@ -2038,174 +2161,19 @@
         title.innerText = `Ukończono wszystkie ${maxKoolka} kółek! 🎉`;
         desc.innerText = "Dzień pracy zakończony! Zjazd do zajezdni (ZAJ).";
         btn.style.display = "none";
+
         zalogowanyKierowcaObj.statusText = "Zakończono służbę";
-        saveState();
+        await updateDriverProfileState(zalogowanyKierowcaObj);
 
         document.getElementById('driver-status-text').innerText = "Zakończono służbę";
         document.getElementById('driver-status-text').style.color = "var(--accent-cream)";
-        czytajTekst("Ukończono wszystkie kółka. Prosimy wysiąść z pojazdu, przejazd techniczny, zjazd do zajezdni.", true);
+        czytajTekst("Ukończono wszystkie kółka. Prosimy wysiąść z pojazdu.", true);
       }
     }
 
-    function rozpocznijKolejneKolko() {
-      if (zalogowanyKierowcaObj.isOnBreak) {
-        alert("Nadal trwa Twoja zaplanowana przerwa!");
-        return;
-      }
+    function rozpoczęcieKolejnegoKolka() {
       document.getElementById('loop-overlay').style.display = 'none';
       startJazdaKierowca();
-    }
-
-    function obslugaZmianyTypuProsby() {
-      const selectTyp = document.getElementById('p-typ').value;
-      const boxWlasny = document.getElementById('container-wlasny-temat');
-      if (selectTyp === "Własny temat") {
-        boxWlasny.style.display = "block";
-      } else {
-        boxWlasny.style.display = "none";
-      }
-    }
-
-    let recognition = null;
-
-    function startVoiceRecognition() {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        alert("Twoja przeglądarka nie wspiera dyktowania głosowego!");
-        return;
-      }
-
-      recognition = new SpeechRecognition();
-      recognition.lang = 'pl-PL';
-      recognition.interimResults = false;
-
-      recognition.onstart = function() {
-        document.getElementById('btn-start-voice').style.display = 'none';
-        document.getElementById('btn-stop-voice').style.display = 'inline-flex';
-      };
-
-      recognition.onresult = function(event) {
-        const transcript = event.results[0][0].transcript;
-        const txtArea = document.getElementById('p-powod');
-        txtArea.value = txtArea.value ? txtArea.value + " " + transcript : transcript;
-      };
-
-      recognition.onerror = function(event) {
-        alert("Błąd podczas nagrywania głosu: " + event.error);
-        stopVoiceRecognition();
-      };
-
-      recognition.onend = function() {
-        stopVoiceRecognition();
-      };
-
-      recognition.start();
-    }
-
-    function stopVoiceRecognition() {
-      if (recognition) {
-        recognition.stop();
-        recognition = null;
-      }
-      document.getElementById('btn-start-voice').style.display = 'inline-flex';
-      document.getElementById('btn-stop-voice').style.display = 'none';
-    }
-
-    function wyslijProsbeKierowcy() {
-      const selectTyp = document.getElementById('p-typ').value;
-      let finalTyp = selectTyp;
-
-      if (selectTyp === "Własny temat") {
-        const customTitle = document.getElementById('p-wlasny-temat').value.trim();
-        if (!customTitle) return alert("Wpisz temat swojego zgłoszenia!");
-        finalTyp = customTitle;
-      }
-
-      const powod = document.getElementById('p-powod').value.trim();
-      if (!powod) return alert("Wpisz treść prośby!");
-
-      const now = new Date();
-      prosbyBaza.unshift({
-        kierowcaId: zalogowanyKierowcaObj.id,
-        kierowcaName: zalogowanyKierowcaObj.name,
-        typ: finalTyp,
-        powod: powod,
-        czas: now.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
-      });
-
-      saveState();
-      alert("Twoja prośba została wysłana do dyspozytora.");
-      document.getElementById('p-powod').value = "";
-      document.getElementById('p-wlasny-temat').value = "";
-    }
-
-    function renderDriverPowiadomienia() {
-      const fullList = document.getElementById('driver-full-notif-list');
-      const homeList = document.getElementById('driver-home-notif-list');
-
-      if(!fullList || !homeList) return;
-
-      fullList.innerHTML = '';
-      homeList.innerHTML = '';
-
-      const list = powiadomieniaBaza[zalogowanyKierowcaObj.id] || [];
-
-      list.forEach(n => {
-        fullList.innerHTML += `
-          <div class="list-item" style="flex-direction: row; justify-content: space-between;">
-            <div>
-              <div style="display: flex; gap: 8px; align-items: center;">
-                <strong>${n.nadawca}</strong>
-                <span style="font-size: 10px; color: var(--text-dim);">${n.czas}</span>
-              </div>
-              <p style="color: #e0e0e0; font-size: 12px; margin-top: 2px;">${n.tresc}</p>
-            </div>
-            <div style="display:flex; gap:4px;">
-              <button class="btn-maroon" style="width: auto; padding: 4px 8px; font-size: 10px;" onclick="czytajTekst('${n.nadawca} mówi: ${n.tresc}', false)">🔊 Czytaj</button>
-              <button class="btn-maroon" style="width: auto; padding: 4px 8px; font-size: 10px; background:#333;" onclick="removeDriverNotification(${zalogowanyKierowcaObj.id}, ${n.id})">🗑️ Usuń</button>
-            </div>
-          </div>
-        `;
-      });
-
-      if (list.length > 0) {
-        const first = list[0];
-        homeList.innerHTML = `
-          <div class="list-item">
-            <div>
-              <strong>${first.nadawca} (${first.czas})</strong>
-              <p style="color: var(--text-dim); font-size: 12px; margin-top: 2px;">${first.tresc}</p>
-            </div>
-            <button class="btn-maroon" style="width: auto; padding: 4px 8px; font-size: 10px;" onclick="czytajTekst('${first.nadawca} mówi: ${first.tresc}', false)">🔊 Czytaj</button>
-          </div>
-        `;
-      } else {
-        homeList.innerHTML = `<div style="color: var(--text-dim); font-size: 11px;">Brak powiadomień.</div>`;
-      }
-    }
-
-    function generujKalendarzKierowcy() {
-      const grid = document.getElementById('driver-cal-grid');
-      if (!grid) return;
-      grid.innerHTML = '';
-
-      const dniTygodnia = ['Pon', 'Wt', 'Śr', 'Czw', 'Pt', 'Sob', 'Nie'];
-      dniTygodnia.forEach(dzien => grid.innerHTML += `<div style="text-align: center; font-weight: 800; font-size: 11px; color: var(--text-dim);">${dzien}</div>`);
-
-      for (let i = 0; i < 5; i++) grid.innerHTML += `<div></div>`;
-
-      for (let i = 1; i <= 31; i++) {
-        const key = `${zalogowanyKierowcaObj.id}_${i}`;
-        const sluzba = grafikBaza[key];
-        grid.innerHTML += `
-          <div class="day-box ${sluzba ? 'work' : ''}">
-            <strong style="font-size:11px;">${i}</strong>
-            <div style="font-size:9px; color:${sluzba ? 'var(--accent-cream)' : '#666'};">
-              ${sluzba ? `${sluzba.linia} (${sluzba.koleka}k)` : 'WOLNE'}
-            </div>
-          </div>
-        `;
-      }
     }
   </script>
 </body>
